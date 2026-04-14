@@ -23,13 +23,28 @@ pub enum AppError {
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
         let (status, msg) = match &self {
-            Self::NotFound => (StatusCode::NOT_FOUND, self.to_string()),
-            Self::Validation(m) => (StatusCode::BAD_REQUEST, m.clone()),
-            Self::Unauthorized => (StatusCode::UNAUTHORIZED, self.to_string()),
-            Self::Conflict(m) => (StatusCode::CONFLICT, m.clone()),
-            Self::BadRequest(m) => (StatusCode::BAD_REQUEST, m.clone()),
+            Self::NotFound => {
+                tracing::warn!(event = "error.not_found", "Resource not found");
+                (StatusCode::NOT_FOUND, self.to_string())
+            }
+            Self::Validation(m) => {
+                tracing::warn!(event = "error.validation", detail = %m, "Validation error");
+                (StatusCode::BAD_REQUEST, m.clone())
+            }
+            Self::Unauthorized => {
+                tracing::warn!(event = "error.unauthorized", "Unauthorized access attempt");
+                (StatusCode::UNAUTHORIZED, self.to_string())
+            }
+            Self::Conflict(m) => {
+                tracing::warn!(event = "error.conflict", detail = %m, "Resource conflict");
+                (StatusCode::CONFLICT, m.clone())
+            }
+            Self::BadRequest(m) => {
+                tracing::warn!(event = "error.bad_request", detail = %m, "Bad request");
+                (StatusCode::BAD_REQUEST, m.clone())
+            }
             Self::Internal(e) => {
-                tracing::error!(error = ?e, "Internal error");
+                tracing::error!(event = "error.internal", error = ?e, "Internal error");
                 (StatusCode::INTERNAL_SERVER_ERROR, "Unexpected error".into())
             }
         };
