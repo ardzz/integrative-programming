@@ -1,0 +1,32 @@
+version: "3.8"
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: blog_db
+      MYSQL_USER: blog_user
+      MYSQL_PASSWORD: blog_password
+    ports: ["3306:3306"]
+    volumes: [mysql_data:/var/lib/mysql]
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+
+  api:
+    build: .
+    ports: ["3000:3000"]
+    environment:
+      DATABASE_URL: "mysql://blog_user:blog_password@mysql:3306/blog_db"
+      JWT_SECRET: "change-me-in-production"
+      RUST_LOG: "blog_api=debug,tower_http=debug"
+    depends_on:
+      mysql: { condition: service_healthy }
+
+volumes:
+  mysql_data:
