@@ -7,7 +7,7 @@ edition = "2021"
 axum = { version = "0.8", features = ["macros"] }
 axum-extra = { version = "0.10", features = ["typed-header"] }
 tokio = { version = "1", features = ["full"] }
-tower-http = { version = "0.6", features = ["cors", "trace"] }
+tower-http = { version = "0.6", features = ["cors", "trace", "request-id"] }
 tower = { version = "0.5", features = ["timeout"] }
 sqlx = { version = "0.8", features = ["mysql", "runtime-tokio", "tls-rustls", "migrate", "chrono"] }
 serde = { version = "1", features = ["derive"] }
@@ -25,3 +25,4 @@ dotenvy = "0.15"
 
 [dev-dependencies]
 reqwest = { version = "0.12", features = ["json"] }
+tracing-test = { version = "0.2", features = ["no-env-filter"] }

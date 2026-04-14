@@ -44,6 +44,7 @@ pub fn verify_token(token: &str, secret: &str) -> Result<Claims, AppError> {
 }
 
 #[allow(dead_code)]
+#[derive(Debug)]
 pub struct AuthUser {
     pub user_id: i32,
 }
