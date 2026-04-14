@@ -1,20 +1,7 @@
+use blog_api::{route, AppState};
 use sqlx::mysql::MySqlPoolOptions;
 use std::time::Duration;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
-
-pub mod auth;
-mod error;
-pub mod handler;
-pub mod model;
-mod route;
-pub mod schema;
-
-/// Shared application state — NOT wrapped in Arc (Axum handles it internally).
-#[derive(Clone)]
-pub struct AppState {
-    pub db: sqlx::MySqlPool,
-    pub jwt_secret: String,
-}
 
 #[tokio::main]
 async fn main() {

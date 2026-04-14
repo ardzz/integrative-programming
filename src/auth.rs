@@ -86,3 +86,40 @@ pub fn verify_password(password: &str, hash: &str) -> Result<bool, AppError> {
         .verify_password(password.as_bytes(), &parsed_hash)
         .is_ok())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{create_token, hash_password, verify_password, verify_token};
+
+    #[test]
+    fn test_hash_and_verify_password() {
+        let hash = hash_password("qwerty").expect("hash should succeed");
+        let verified = verify_password("qwerty", &hash).expect("verify should succeed");
+
+        assert!(verified);
+    }
+
+    #[test]
+    fn test_verify_wrong_password() {
+        let hash = hash_password("qwerty").expect("hash should succeed");
+        let verified = verify_password("wrong", &hash).expect("verify should succeed");
+
+        assert!(!verified);
+    }
+
+    #[test]
+    fn test_create_and_verify_token() {
+        let token = create_token(1, "test-secret").expect("token creation should succeed");
+        let claims = verify_token(&token, "test-secret").expect("token should verify");
+
+        assert_eq!(claims.sub, "1");
+        assert!(claims.exp >= claims.iat);
+    }
+
+    #[test]
+    fn test_verify_invalid_token() {
+        let result = verify_token("garbage-token", "test-secret");
+
+        assert!(result.is_err());
+    }
+}

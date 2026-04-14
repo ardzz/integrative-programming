@@ -42,15 +42,65 @@ impl From<sqlx::Error> for AppError {
         match &e {
             sqlx::Error::Database(db_err) => {
                 let code = db_err.code().unwrap_or_default();
-                match code.as_ref() {
-                    "1062" => AppError::Conflict("Duplicate entry".into()),
-                    "1451" => AppError::Conflict("Referenced by other records".into()),
-                    "1452" => AppError::BadRequest("Referenced record not found".into()),
-                    _ => AppError::Internal(anyhow::anyhow!(e)),
+                let message = db_err.message();
+
+                if code.as_ref() == "1062"
+                    || message.contains("1062")
+                    || message.contains("Duplicate entry")
+                {
+                    AppError::Conflict("Duplicate entry".into())
+                } else if code.as_ref() == "1451"
+                    || message.contains("1451")
+                    || message.contains("Cannot delete or update a parent row")
+                {
+                    AppError::Conflict("Referenced by other records".into())
+                } else if code.as_ref() == "1452"
+                    || message.contains("1452")
+                    || message.contains("Cannot add or update a child row")
+                {
+                    AppError::BadRequest("Referenced record not found".into())
+                } else {
+                    AppError::Internal(anyhow::anyhow!(e))
                 }
             }
             sqlx::Error::RowNotFound => AppError::NotFound,
             _ => AppError::Internal(anyhow::anyhow!(e)),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::AppError;
+    use axum::{http::StatusCode, response::IntoResponse};
+
+    fn status_of(error: AppError) -> StatusCode {
+        error.into_response().status()
+    }
+
+    #[test]
+    fn test_not_found_status() {
+        assert_eq!(status_of(AppError::NotFound), StatusCode::NOT_FOUND);
+    }
+
+    #[test]
+    fn test_validation_status() {
+        assert_eq!(
+            status_of(AppError::Validation("invalid".into())),
+            StatusCode::BAD_REQUEST
+        );
+    }
+
+    #[test]
+    fn test_unauthorized_status() {
+        assert_eq!(status_of(AppError::Unauthorized), StatusCode::UNAUTHORIZED);
+    }
+
+    #[test]
+    fn test_conflict_status() {
+        assert_eq!(
+            status_of(AppError::Conflict("duplicate".into())),
+            StatusCode::CONFLICT
+        );
     }
 }
