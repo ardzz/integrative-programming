@@ -64,20 +64,6 @@ async fn ensure_test_database_ready(database_url: &str) {
                 .expect("DB connect");
 
             sqlx::migrate!().run(&pool).await.expect("migrations");
-
-            for statement in [
-                "ALTER TABLE users MODIFY COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP",
-                "ALTER TABLE users MODIFY COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-                "ALTER TABLE posts MODIFY COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP",
-                "ALTER TABLE posts MODIFY COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-                "ALTER TABLE comments MODIFY COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP",
-                "ALTER TABLE comments MODIFY COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            ] {
-                sqlx::query(statement)
-                    .execute(&pool)
-                    .await
-                    .expect("test schema compatibility update");
-            }
         })
         .await;
 }
