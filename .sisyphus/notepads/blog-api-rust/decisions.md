@@ -1,0 +1,2 @@
+- Kept src/main.rs as the default cargo-init placeholder only.
+- Preserved the exact dependency versions/features requested in Cargo.toml.

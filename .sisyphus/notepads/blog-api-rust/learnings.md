@@ -1,0 +1,3 @@
+- cargo init created a standard binary scaffold, and cargo check succeeded after locking dependencies.
+- The requested dependency set resolves cleanly with axum 0.8 / sqlx 0.8 / tokio 1.
+- .env should stay ignored by git; .env.example carries the shareable defaults.
