@@ -1,16 +1,13 @@
-use axum::{routing::get, Json, Router};
-use serde_json::json;
 use sqlx::mysql::MySqlPoolOptions;
 use std::time::Duration;
-use tower_http::cors::CorsLayer;
-use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
 
 pub mod auth;
 mod error;
-pub mod model;
-pub mod schema;
 pub mod handler;
+pub mod model;
+mod route;
+pub mod schema;
 
 /// Shared application state — NOT wrapped in Arc (Axum handles it internally).
 #[derive(Clone)]
@@ -57,12 +54,8 @@ async fn main() {
         jwt_secret,
     };
 
-    // 6. Router with health endpoint
-    let app = Router::new()
-        .route("/health", get(health_check))
-        .layer(CorsLayer::permissive())
-        .layer(TraceLayer::new_for_http())
-        .with_state(state);
+    // 6. Router
+    let app = route::create_router(state);
 
     // 7. Bind and serve
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000")
@@ -70,8 +63,4 @@ async fn main() {
         .unwrap();
     tracing::info!("listening on {}", listener.local_addr().unwrap());
     axum::serve(listener, app).await.unwrap();
-}
-
-async fn health_check() -> Json<serde_json::Value> {
-    Json(json!({"status": "ok"}))
 }
