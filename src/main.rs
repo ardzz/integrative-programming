@@ -6,7 +6,10 @@ use tower_http::cors::CorsLayer;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
 
+pub mod auth;
 mod error;
+pub mod model;
+pub mod schema;
 
 /// Shared application state — NOT wrapped in Arc (Axum handles it internally).
 #[derive(Clone)]
