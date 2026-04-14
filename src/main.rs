@@ -10,6 +10,7 @@ pub mod auth;
 mod error;
 pub mod model;
 pub mod schema;
+pub mod handler;
 
 /// Shared application state — NOT wrapped in Arc (Axum handles it internally).
 #[derive(Clone)]
