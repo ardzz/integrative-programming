@@ -1,6 +1,7 @@
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::Json;
+use tracing::instrument;
 use validator::Validate;
 
 use crate::auth::AuthUser;
@@ -36,6 +37,7 @@ impl From<PostWithUser> for PostResponse {
     }
 }
 
+#[instrument(skip_all)]
 pub async fn list_posts(
     State(state): State<AppState>,
 ) -> Result<Json<Vec<PostResponse>>, AppError> {
@@ -46,9 +48,11 @@ pub async fn list_posts(
     .await?;
 
     let responses: Vec<PostResponse> = posts.into_iter().map(|p| p.into()).collect();
+    tracing::debug!(event = "post.listed", "Posts listed");
     Ok(Json(responses))
 }
 
+#[instrument(skip_all)]
 pub async fn create_post(
     State(state): State<AppState>,
     auth: AuthUser,
@@ -76,6 +80,7 @@ pub async fn create_post(
     .await?;
 
     let new_id = result.last_insert_id() as i32;
+    tracing::info!(event = "post.created", post_id = %new_id, author_id = %auth.user_id, "Post created");
 
     let post = sqlx::query_as::<_, PostWithUser>(
         "SELECT p.*, u.name as user_name FROM posts p JOIN users u ON p.user_id = u.id WHERE p.id = ?",
@@ -87,6 +92,7 @@ pub async fn create_post(
     Ok((StatusCode::CREATED, Json(post.into())))
 }
 
+#[instrument(skip_all)]
 pub async fn get_post(
     State(state): State<AppState>,
     Path(id): Path<i32>,
@@ -99,9 +105,11 @@ pub async fn get_post(
     .await?
     .ok_or(AppError::NotFound)?;
 
+    tracing::debug!(event = "post.retrieved", post_id = %id, "Post retrieved");
     Ok(Json(post.into()))
 }
 
+#[instrument(skip_all)]
 pub async fn update_post(
     State(state): State<AppState>,
     auth: AuthUser,
@@ -142,6 +150,8 @@ pub async fn update_post(
         .execute(&state.db)
         .await?;
 
+    tracing::info!(event = "post.updated", post_id = %id, author_id = %auth.user_id, "Post updated");
+
     let updated = sqlx::query_as::<_, PostWithUser>(
         "SELECT p.*, u.name as user_name FROM posts p JOIN users u ON p.user_id = u.id WHERE p.id = ?",
     )
@@ -152,6 +162,7 @@ pub async fn update_post(
     Ok(Json(updated.into()))
 }
 
+#[instrument(skip_all)]
 pub async fn delete_post(
     State(state): State<AppState>,
     auth: AuthUser,
@@ -174,5 +185,6 @@ pub async fn delete_post(
         .execute(&state.db)
         .await?;
 
+    tracing::info!(event = "post.deleted", post_id = %id, author_id = %auth.user_id, "Post deleted");
     Ok(StatusCode::NO_CONTENT)
 }
