@@ -6,6 +6,8 @@ use axum::http::request::Parts;
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 
+use tracing::{debug, instrument, warn};
+
 use crate::error::AppError;
 use crate::AppState;
 
@@ -17,6 +19,7 @@ pub struct Claims {
 }
 
 #[allow(dead_code)]
+#[instrument(skip_all)]
 pub fn create_token(user_id: i32, secret: &str) -> Result<String, AppError> {
     let now = chrono::Utc::now();
     let claims = Claims {
@@ -24,22 +27,29 @@ pub fn create_token(user_id: i32, secret: &str) -> Result<String, AppError> {
         iat: now.timestamp() as usize,
         exp: (now + chrono::Duration::hours(24)).timestamp() as usize,
     };
-    encode(
+    let token = encode(
         &Header::default(),
         &claims,
         &EncodingKey::from_secret(secret.as_bytes()),
     )
-    .map_err(|e| AppError::Internal(anyhow::anyhow!(e)))
+    .map_err(|e| AppError::Internal(anyhow::anyhow!(e)))?;
+    debug!(event = "auth.token.created", user_id = %user_id, "JWT token created");
+    Ok(token)
 }
 
 #[allow(dead_code)]
+#[instrument(skip_all)]
 pub fn verify_token(token: &str, secret: &str) -> Result<Claims, AppError> {
     let token_data = decode::<Claims>(
         token,
         &DecodingKey::from_secret(secret.as_bytes()),
         &Validation::default(),
     )
-    .map_err(|_| AppError::Unauthorized)?;
+    .map_err(|_| {
+        warn!(event = "auth.token.invalid", "Token verification failed");
+        AppError::Unauthorized
+    })?;
+    debug!(event = "auth.token.verified", user_id = %token_data.claims.sub, "Token verified");
     Ok(token_data.claims)
 }
 
@@ -70,6 +80,7 @@ impl FromRequestParts<AppState> for AuthUser {
 }
 
 #[allow(dead_code)]
+#[instrument(skip_all)]
 pub fn hash_password(password: &str) -> Result<String, AppError> {
     let salt = SaltString::generate(&mut OsRng);
     let argon2 = Argon2::default();
@@ -80,6 +91,7 @@ pub fn hash_password(password: &str) -> Result<String, AppError> {
 }
 
 #[allow(dead_code)]
+#[instrument(skip_all)]
 pub fn verify_password(password: &str, hash: &str) -> Result<bool, AppError> {
     let parsed_hash =
         PasswordHash::new(hash).map_err(|e| AppError::Internal(anyhow::anyhow!(e)))?;
