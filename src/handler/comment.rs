@@ -1,6 +1,7 @@
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::Json;
+use tracing::{debug, info, instrument};
 use validator::Validate;
 
 use crate::auth::AuthUser;
@@ -34,7 +35,9 @@ impl From<CommentWithUser> for CommentResponse {
     }
 }
 
+#[instrument(skip_all)]
 async fn ensure_post_exists(pool: &sqlx::MySqlPool, post_id: i32) -> Result<(), AppError> {
+    debug!(event = "comment.post_check", post_id = %post_id, "Checking post exists");
     let result = sqlx::query("SELECT id FROM posts WHERE id = ?")
         .bind(post_id)
         .fetch_optional(pool)
@@ -45,6 +48,7 @@ async fn ensure_post_exists(pool: &sqlx::MySqlPool, post_id: i32) -> Result<(), 
     Ok(())
 }
 
+#[instrument(skip_all)]
 pub async fn list_comments(
     State(state): State<AppState>,
     Path(post_id): Path<i32>,
@@ -59,9 +63,11 @@ pub async fn list_comments(
     .await?;
 
     let responses: Vec<CommentResponse> = comments.into_iter().map(|c| c.into()).collect();
+    debug!(event = "comment.listed", post_id = %post_id, "Comments listed");
     Ok(Json(responses))
 }
 
+#[instrument(skip_all)]
 pub async fn create_comment(
     State(state): State<AppState>,
     auth: AuthUser,
@@ -81,6 +87,7 @@ pub async fn create_comment(
         .await?;
 
     let new_id = result.last_insert_id() as i32;
+    info!(event = "comment.created", comment_id = %new_id, post_id = %post_id, author_id = %auth.user_id, "Comment created");
 
     let comment = sqlx::query_as::<_, CommentWithUser>(
         "SELECT c.*, u.name as user_name FROM comments c JOIN users u ON c.user_id = u.id WHERE c.id = ?",
@@ -92,6 +99,7 @@ pub async fn create_comment(
     Ok((StatusCode::CREATED, Json(comment.into())))
 }
 
+#[instrument(skip_all)]
 pub async fn get_comment(
     State(state): State<AppState>,
     Path((post_id, comment_id)): Path<(i32, i32)>,
@@ -105,9 +113,11 @@ pub async fn get_comment(
     .await?
     .ok_or(AppError::NotFound)?;
 
+    debug!(event = "comment.retrieved", comment_id = %comment_id, "Comment retrieved");
     Ok(Json(comment.into()))
 }
 
+#[instrument(skip_all)]
 pub async fn update_comment(
     State(state): State<AppState>,
     auth: AuthUser,
@@ -137,6 +147,8 @@ pub async fn update_comment(
         .execute(&state.db)
         .await?;
 
+    info!(event = "comment.updated", comment_id = %comment_id, author_id = %auth.user_id, "Comment updated");
+
     let updated = sqlx::query_as::<_, CommentWithUser>(
         "SELECT c.*, u.name as user_name FROM comments c JOIN users u ON c.user_id = u.id WHERE c.id = ?",
     )
@@ -147,6 +159,7 @@ pub async fn update_comment(
     Ok(Json(updated.into()))
 }
 
+#[instrument(skip_all)]
 pub async fn delete_comment(
     State(state): State<AppState>,
     auth: AuthUser,
@@ -170,5 +183,6 @@ pub async fn delete_comment(
         .execute(&state.db)
         .await?;
 
+    info!(event = "comment.deleted", comment_id = %comment_id, author_id = %auth.user_id, "Comment deleted");
     Ok(StatusCode::NO_CONTENT)
 }

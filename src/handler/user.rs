@@ -1,6 +1,7 @@
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::Json;
+use tracing::{debug, info, instrument};
 use validator::Validate;
 
 use crate::auth::{hash_password, AuthUser};
@@ -9,6 +10,7 @@ use crate::model::user::{UserResponse, UserRow};
 use crate::schema::user::UpdateUser;
 use crate::AppState;
 
+#[instrument(skip_all)]
 pub async fn list_users(
     State(state): State<AppState>,
     _auth: AuthUser,
@@ -17,9 +19,11 @@ pub async fn list_users(
         .fetch_all(&state.db)
         .await?;
     let responses: Vec<UserResponse> = users.into_iter().map(|u| u.into()).collect();
+    debug!(event = "user.listed", "Users listed");
     Ok(Json(responses))
 }
 
+#[instrument(skip_all)]
 pub async fn get_user(
     State(state): State<AppState>,
     _auth: AuthUser,
@@ -30,9 +34,11 @@ pub async fn get_user(
         .fetch_optional(&state.db)
         .await?
         .ok_or(AppError::NotFound)?;
+    debug!(event = "user.retrieved", user_id = %id, "User retrieved");
     Ok(Json(user.into()))
 }
 
+#[instrument(skip_all)]
 pub async fn update_user(
     State(state): State<AppState>,
     auth: AuthUser,
@@ -73,9 +79,11 @@ pub async fn update_user(
         .fetch_one(&state.db)
         .await?;
 
+    info!(event = "user.updated", user_id = %id, "User updated");
     Ok(Json(updated.into()))
 }
 
+#[instrument(skip_all)]
 pub async fn delete_user(
     State(state): State<AppState>,
     auth: AuthUser,
@@ -94,5 +102,6 @@ pub async fn delete_user(
         return Err(AppError::NotFound);
     }
 
+    info!(event = "user.deleted", user_id = %id, "User deleted");
     Ok(StatusCode::NO_CONTENT)
 }
