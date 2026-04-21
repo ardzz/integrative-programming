@@ -12,6 +12,8 @@ pub enum AppError {
     Validation(String),
     #[error("Unauthorized")]
     Unauthorized,
+    #[error("Forbidden: {0}")]
+    Forbidden(String),
     #[error("Conflict: {0}")]
     Conflict(String),
     #[error("Bad request: {0}")]
@@ -34,6 +36,10 @@ impl IntoResponse for AppError {
             Self::Unauthorized => {
                 tracing::warn!(event = "error.unauthorized", "Unauthorized access attempt");
                 (StatusCode::UNAUTHORIZED, self.to_string())
+            }
+            Self::Forbidden(m) => {
+                tracing::warn!(event = "error.forbidden", detail = %m, "Forbidden access attempt");
+                (StatusCode::FORBIDDEN, m.clone())
             }
             Self::Conflict(m) => {
                 tracing::warn!(event = "error.conflict", detail = %m, "Resource conflict");
@@ -109,6 +115,14 @@ mod tests {
     #[test]
     fn test_unauthorized_status() {
         assert_eq!(status_of(AppError::Unauthorized), StatusCode::UNAUTHORIZED);
+    }
+
+    #[test]
+    fn test_forbidden_status() {
+        assert_eq!(
+            status_of(AppError::Forbidden("not owner".into())),
+            StatusCode::FORBIDDEN,
+        );
     }
 
     #[test]
