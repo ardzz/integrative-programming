@@ -1,4 +1,4 @@
-use axum::extract::{Path, State};
+use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
 use axum::Json;
 use tracing::{debug, info, instrument};
@@ -7,7 +7,9 @@ use validator::Validate;
 use crate::auth::AuthUser;
 use crate::error::AppError;
 use crate::model::comment::CommentResponse;
+use crate::model::pagination::Paginated;
 use crate::schema::comment::{CreateComment, UpdateComment};
+use crate::schema::pagination::PaginationQuery;
 use crate::AppState;
 
 #[derive(sqlx::FromRow)]
@@ -52,19 +54,35 @@ async fn ensure_post_exists(pool: &sqlx::MySqlPool, post_id: i32) -> Result<(), 
 pub async fn list_comments(
     State(state): State<AppState>,
     Path(post_id): Path<i32>,
-) -> Result<Json<Vec<CommentResponse>>, AppError> {
+    Query(pagination): Query<PaginationQuery>,
+) -> Result<Json<Paginated<CommentResponse>>, AppError> {
     ensure_post_exists(&state.db, post_id).await?;
 
+    pagination
+        .validate()
+        .map_err(|e| AppError::Validation(e.to_string()))?;
+
+    let page = pagination.page();
+    let per_page = pagination.per_page();
+    let offset = pagination.offset();
+
+    let total: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM comments WHERE post_id = ?")
+        .bind(post_id)
+        .fetch_one(&state.db)
+        .await?;
+
     let comments = sqlx::query_as::<_, CommentWithUser>(
-        "SELECT c.*, u.name as user_name FROM comments c JOIN users u ON c.user_id = u.id WHERE c.post_id = ?",
+        "SELECT c.*, u.name as user_name FROM comments c JOIN users u ON c.user_id = u.id WHERE c.post_id = ? LIMIT ? OFFSET ?",
     )
     .bind(post_id)
+    .bind(per_page as i64)
+    .bind(offset as i64)
     .fetch_all(&state.db)
     .await?;
 
-    let responses: Vec<CommentResponse> = comments.into_iter().map(|c| c.into()).collect();
-    debug!(event = "comment.listed", post_id = %post_id, "Comments listed");
-    Ok(Json(responses))
+    let data: Vec<CommentResponse> = comments.into_iter().map(|c| c.into()).collect();
+    debug!(event = "comment.listed", post_id = %post_id, page = %page, per_page = %per_page, total = %total, "Comments listed");
+    Ok(Json(Paginated::new(data, page, per_page, total as u64)))
 }
 
 #[instrument(skip_all)]
@@ -138,7 +156,9 @@ pub async fn update_comment(
     .ok_or(AppError::NotFound)?;
 
     if current.user_id != auth.user_id {
-        return Err(AppError::Unauthorized);
+        return Err(AppError::Forbidden(
+            "You can only modify your own comments".into(),
+        ));
     }
 
     sqlx::query("UPDATE comments SET comment = ? WHERE id = ?")
@@ -175,7 +195,9 @@ pub async fn delete_comment(
     .ok_or(AppError::NotFound)?;
 
     if current.user_id != auth.user_id {
-        return Err(AppError::Unauthorized);
+        return Err(AppError::Forbidden(
+            "You can only modify your own comments".into(),
+        ));
     }
 
     sqlx::query("DELETE FROM comments WHERE id = ?")
