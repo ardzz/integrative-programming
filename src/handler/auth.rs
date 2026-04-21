@@ -4,11 +4,18 @@ use axum::Json;
 use tracing::{info, instrument, warn};
 use validator::Validate;
 
-use crate::auth::{create_token, hash_password, verify_password};
+use crate::auth::{create_access_token, create_refresh_token, hash_password, verify_password};
 use crate::error::AppError;
 use crate::model::user::{UserResponse, UserRow};
 use crate::schema::user::{AuthResponse, CreateUser, LoginUser};
 use crate::AppState;
+
+fn auth_token_ttl_u32(var_name: &str, default: u32) -> u32 {
+    std::env::var(var_name)
+        .ok()
+        .and_then(|value| value.parse().ok())
+        .unwrap_or(default)
+}
 
 #[instrument(skip_all)]
 pub async fn register(
@@ -37,13 +44,23 @@ pub async fn register(
 
     info!(event = "auth.register.success", user_id = %user.id, "User registered");
 
-    let token = create_token(user.id, &state.jwt_secret)?;
+    let access_token = create_access_token(
+        user.id,
+        &state.jwt_secret,
+        auth_token_ttl_u32("ACCESS_TOKEN_TTL_MINUTES", 15),
+    )?;
+    let refresh_token = create_refresh_token(
+        user.id,
+        &state.jwt_secret,
+        auth_token_ttl_u32("REFRESH_TOKEN_TTL_DAYS", 7),
+    )?;
     let user_response: UserResponse = user.into();
 
     Ok((
         StatusCode::CREATED,
         Json(AuthResponse {
-            token,
+            access_token,
+            refresh_token,
             user: user_response,
         }),
     ))
@@ -76,12 +93,22 @@ pub async fn login(
         return Err(AppError::Unauthorized);
     }
 
-    let token = create_token(user.id, &state.jwt_secret)?;
+    let access_token = create_access_token(
+        user.id,
+        &state.jwt_secret,
+        auth_token_ttl_u32("ACCESS_TOKEN_TTL_MINUTES", 15),
+    )?;
+    let refresh_token = create_refresh_token(
+        user.id,
+        &state.jwt_secret,
+        auth_token_ttl_u32("REFRESH_TOKEN_TTL_DAYS", 7),
+    )?;
     info!(event = "auth.login.success", user_id = %user.id, "User logged in");
     let user_response: UserResponse = user.into();
 
     Ok(Json(AuthResponse {
-        token,
+        access_token,
+        refresh_token,
         user: user_response,
     }))
 }

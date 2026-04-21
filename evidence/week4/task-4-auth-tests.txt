@@ -1,0 +1,4 @@
+   Compiling blog-api v0.1.0 (/home/reky/college/integrative-programming/week3/blog-api)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.30s
+     Running unittests src/lib.rs (target/debug/deps/blog_api-d5c4605edb453c4e)
+cargo test: 8 passed, 9 filtered out (1 suite, 0.84s)
