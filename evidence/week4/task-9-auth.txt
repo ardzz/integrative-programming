@@ -1,0 +1,29 @@
+Task T9 verification - Tue Apr 21 2026
+
+Command: cargo check --tests
+Result: FAILED
+Relevant output:
+error[E0308]: mismatched types
+   --> tests/logging_test.rs:46:28
+    |
+ 46 |     create_test_post(&app, &token, "Smoke Test Post", "Content").await;
+    |                            ^^^^^^ expected `&str`, found `&AuthTokens`
+    |
+note: function defined here
+   --> tests/common/mod.rs:174:14
+174 | pub async fn create_test_post(app: &TestApp, token: &str, title: &str, content: &str) -> Value {
+
+Command: cargo clippy -- -D warnings
+Result: PASSED
+
+Command: grep -c 'pub async fn refresh' src/handler/auth.rs
+Result: 1
+
+Command: grep -cE 'access_token|refresh_token' src/handler/auth.rs
+Result: 15
+
+Command: grep -cE 'test_refresh|access_token|refresh_token' tests/auth_test.rs
+Result: 18
+
+Command: cargo check --test auth_test
+Result: PASSED
