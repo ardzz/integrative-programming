@@ -41,9 +41,9 @@ async fn test_login_failure_emits_event() {
 async fn test_post_created_emits_event() {
     let app = spawn_app().await;
     let email = unique_email("log-post");
-    let (token, _) = register_user(&app, "PostLogger", &email, "qwerty").await;
+    let (tokens, _) = register_user(&app, "PostLogger", &email, "qwerty").await;
 
-    create_test_post(&app, &token, "Smoke Test Post", "Content").await;
+    create_test_post(&app, &tokens.access, "Smoke Test Post", "Content").await;
 
     assert!(logs_contain("post.created"));
 }
