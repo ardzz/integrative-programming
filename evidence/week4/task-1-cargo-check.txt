@@ -1,0 +1,40 @@
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on build directory
+    Checking crossbeam-utils v0.8.21
+    Checking futures-util v0.3.32
+   Compiling concurrent-queue v2.5.0
+    Checking getrandom v0.3.4
+   Compiling crossbeam-queue v0.3.12
+    Checking hyper v1.9.0
+    Checking raw-cpuid v11.6.0
+    Checking hashbrown v0.14.5
+    Checking thiserror v1.0.69
+    Checking rand_core v0.9.5
+   Compiling event-listener v5.4.1
+    Checking portable-atomic v1.13.1
+    Checking rand_chacha v0.9.0
+   Compiling sqlx-core v0.8.6
+    Checking dashmap v6.1.0
+    Checking rand v0.9.4
+    Checking spinning_top v0.3.0
+    Checking hyper-util v0.1.20
+    Checking nonzero_ext v0.3.0
+    Checking no-std-compat v0.4.1
+    Checking futures-timer v3.0.3
+    Checking web-time v1.1.0
+    Checking nonempty v0.7.0
+    Checking pin-project v1.1.11
+    Checking forwarded-header-value v0.1.1
+    Checking quanta v0.12.6
+    Checking tower v0.5.3
+    Checking governor v0.8.1
+    Checking axum v0.8.9
+   Compiling sqlx-mysql v0.8.6
+   Compiling sqlx-macros-core v0.8.6
+    Checking tower_governor v0.7.0
+    Checking axum-extra v0.10.3
+   Compiling sqlx-macros v0.8.6
+    Checking sqlx v0.8.6
+    Checking blog-api v0.1.0 (/home/reky/college/integrative-programming/week3/blog-api)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 24.77s
+cargo build (0 crates compiled)
