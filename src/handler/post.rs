@@ -1,4 +1,4 @@
-use axum::extract::{Path, State};
+use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
 use axum::Json;
 use tracing::instrument;
@@ -6,7 +6,9 @@ use validator::Validate;
 
 use crate::auth::AuthUser;
 use crate::error::AppError;
+use crate::model::pagination::Paginated;
 use crate::model::post::PostResponse;
+use crate::schema::pagination::PaginationQuery;
 use crate::schema::post::{CreatePost, UpdatePost};
 use crate::AppState;
 
@@ -40,16 +42,31 @@ impl From<PostWithUser> for PostResponse {
 #[instrument(skip_all)]
 pub async fn list_posts(
     State(state): State<AppState>,
-) -> Result<Json<Vec<PostResponse>>, AppError> {
+    Query(pagination): Query<PaginationQuery>,
+) -> Result<Json<Paginated<PostResponse>>, AppError> {
+    pagination
+        .validate()
+        .map_err(|e| AppError::Validation(e.to_string()))?;
+
+    let page = pagination.page();
+    let per_page = pagination.per_page();
+    let offset = pagination.offset();
+
+    let total: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM posts")
+        .fetch_one(&state.db)
+        .await?;
+
     let posts = sqlx::query_as::<_, PostWithUser>(
-        "SELECT p.*, u.name as user_name FROM posts p JOIN users u ON p.user_id = u.id",
+        "SELECT p.*, u.name as user_name FROM posts p JOIN users u ON p.user_id = u.id LIMIT ? OFFSET ?",
     )
+    .bind(per_page as i64)
+    .bind(offset as i64)
     .fetch_all(&state.db)
     .await?;
 
-    let responses: Vec<PostResponse> = posts.into_iter().map(|p| p.into()).collect();
-    tracing::debug!(event = "post.listed", "Posts listed");
-    Ok(Json(responses))
+    let data: Vec<PostResponse> = posts.into_iter().map(|p| p.into()).collect();
+    tracing::debug!(event = "post.listed", page = %page, per_page = %per_page, total = %total, "Posts listed");
+    Ok(Json(Paginated::new(data, page, per_page, total as u64)))
 }
 
 #[instrument(skip_all)]
@@ -129,7 +146,9 @@ pub async fn update_post(
     .ok_or(AppError::NotFound)?;
 
     if current.user_id != auth.user_id {
-        return Err(AppError::Unauthorized);
+        return Err(AppError::Forbidden(
+            "You can only modify your own posts".into(),
+        ));
     }
 
     let title = input.title.unwrap_or(current.title);
@@ -177,7 +196,9 @@ pub async fn delete_post(
     .ok_or(AppError::NotFound)?;
 
     if post.user_id != auth.user_id {
-        return Err(AppError::Unauthorized);
+        return Err(AppError::Forbidden(
+            "You can only modify your own posts".into(),
+        ));
     }
 
     sqlx::query("DELETE FROM posts WHERE id = ?")
