@@ -1,0 +1,261 @@
+
+===== Register User A =====
+$ POST /api/auth/register
+
+HTTP/1.1 404 Not Found
+Content-Type: application/json
+Vary: Origin
+Date: Tue, 21 Apr 2026 14:45:36 GMT
+Content-Length: 21
+
+{"error":"Not found"}
+=== HTTP 404 in 0.000920s ===
+
+
+===== Register User B =====
+$ POST /api/auth/register
+
+HTTP/1.1 404 Not Found
+Content-Type: application/json
+Vary: Origin
+Date: Tue, 21 Apr 2026 14:45:36 GMT
+Content-Length: 21
+
+{"error":"Not found"}
+=== HTTP 404 in 0.000723s ===
+
+
+===== Register User C =====
+$ POST /api/auth/register
+
+HTTP/1.1 404 Not Found
+Content-Type: application/json
+Vary: Origin
+Date: Tue, 21 Apr 2026 14:45:36 GMT
+Content-Length: 21
+
+{"error":"Not found"}
+=== HTTP 404 in 0.000886s ===
+
+
+===== 1. Pagination Demo =====
+$ GET /api/posts?page=1&per_page=2
+
+HTTP/1.1 404 Not Found
+Content-Type: application/json
+Vary: Origin
+Date: Tue, 21 Apr 2026 14:45:36 GMT
+Content-Length: 21
+
+{"error":"Not found"}
+=== HTTP 404 in 0.001226s ===
+
+$ GET /api/posts?per_page=200
+
+HTTP/1.1 404 Not Found
+Content-Type: application/json
+Vary: Origin
+Date: Tue, 21 Apr 2026 14:45:36 GMT
+Content-Length: 21
+
+{"error":"Not found"}
+=== HTTP 404 in 0.001424s ===
+
+
+===== 2. 403 Forbidden Demo =====
+$ POST /api/posts
+
+HTTP/1.1 404 Not Found
+Content-Type: application/json
+Vary: Origin
+Date: Tue, 21 Apr 2026 14:45:37 GMT
+Content-Length: 21
+
+{"error":"Not found"}
+=== HTTP 404 in 0.001524s ===
+
+$ PUT /api/posts/
+
+HTTP/1.1 404 Not Found
+Content-Type: application/json
+Vary: Origin
+Date: Tue, 21 Apr 2026 14:45:37 GMT
+Content-Length: 21
+
+{"error":"Not found"}
+=== HTTP 404 in 0.001579s ===
+
+$ DELETE /api/posts/
+
+HTTP/1.1 404 Not Found
+Content-Type: application/json
+Vary: Origin
+Date: Tue, 21 Apr 2026 14:45:37 GMT
+Content-Length: 21
+
+{"error":"Not found"}
+=== HTTP 404 in 0.001495s ===
+
+
+===== 3. /me Endpoint Demo =====
+$ GET /api/users/me
+
+HTTP/1.1 404 Not Found
+Content-Type: application/json
+Vary: Origin
+Date: Tue, 21 Apr 2026 14:45:37 GMT
+Content-Length: 21
+
+{"error":"Not found"}
+=== HTTP 404 in 0.003068s ===
+
+$ PUT /api/users/me
+
+HTTP/1.1 404 Not Found
+Content-Type: application/json
+Vary: Origin
+Date: Tue, 21 Apr 2026 14:45:37 GMT
+Content-Length: 21
+
+{"error":"Not found"}
+=== HTTP 404 in 0.000827s ===
+
+$ PUT /api/users/1
+
+HTTP/1.1 404 Not Found
+Content-Type: application/json
+Vary: Origin
+Date: Tue, 21 Apr 2026 14:45:37 GMT
+Content-Length: 21
+
+{"error":"Not found"}
+=== HTTP 404 in 0.001136s ===
+
+
+===== 4. Rate Limiting Demo =====
+$ POST /api/auth/login (x7 rapid invalid attempts)
+--- Attempt 1 ---
+HTTP/1.1 400 Bad Request
+Content-Type: application/json
+Vary: Origin
+Date: Tue, 21 Apr 2026 14:45:37 GMT
+Content-Length: 81
+
+{"success":false,"error":"Validation failed: username and password are required"}
+=== HTTP 400 in 0.001218s ===
+
+--- Attempt 2 ---
+HTTP/1.1 400 Bad Request
+Content-Type: application/json
+Vary: Origin
+Date: Tue, 21 Apr 2026 14:45:37 GMT
+Content-Length: 81
+
+{"success":false,"error":"Validation failed: username and password are required"}
+=== HTTP 400 in 0.003846s ===
+
+--- Attempt 3 ---
+HTTP/1.1 429 Too Many Requests
+Content-Type: application/json
+Vary: Origin
+Date: Tue, 21 Apr 2026 14:45:37 GMT
+Content-Length: 54
+
+{"error":"Too many requests. Please try again later."}
+=== HTTP 429 in 0.000617s ===
+
+--- Attempt 4 ---
+HTTP/1.1 429 Too Many Requests
+Content-Type: application/json
+Vary: Origin
+Date: Tue, 21 Apr 2026 14:45:37 GMT
+Content-Length: 54
+
+{"error":"Too many requests. Please try again later."}
+=== HTTP 429 in 0.000682s ===
+
+--- Attempt 5 ---
+HTTP/1.1 429 Too Many Requests
+Content-Type: application/json
+Vary: Origin
+Date: Tue, 21 Apr 2026 14:45:37 GMT
+Content-Length: 54
+
+{"error":"Too many requests. Please try again later."}
+=== HTTP 429 in 0.000733s ===
+
+--- Attempt 6 ---
+HTTP/1.1 429 Too Many Requests
+Content-Type: application/json
+Vary: Origin
+Date: Tue, 21 Apr 2026 14:45:37 GMT
+Content-Length: 54
+
+{"error":"Too many requests. Please try again later."}
+=== HTTP 429 in 0.000903s ===
+
+--- Attempt 7 ---
+HTTP/1.1 429 Too Many Requests
+Content-Type: application/json
+Vary: Origin
+Date: Tue, 21 Apr 2026 14:45:37 GMT
+Content-Length: 54
+
+{"error":"Too many requests. Please try again later."}
+=== HTTP 429 in 0.003080s ===
+
+
+Waiting 0s for auth rate-limit window to cool down before refresh flow.
+
+===== 5. Refresh Token Flow Demo =====
+$ POST /api/auth/login
+
+HTTP/1.1 429 Too Many Requests
+Content-Type: application/json
+Vary: Origin
+Date: Tue, 21 Apr 2026 14:45:37 GMT
+Content-Length: 54
+
+{"error":"Too many requests. Please try again later."}
+=== HTTP 429 in 0.000782s ===
+
+$ POST /api/auth/refresh
+
+HTTP/1.1 429 Too Many Requests
+Content-Type: application/json
+Vary: Origin
+Date: Tue, 21 Apr 2026 14:45:37 GMT
+Content-Length: 54
+
+{"error":"Too many requests. Please try again later."}
+=== HTTP 429 in 0.000741s ===
+
+$ POST /api/auth/refresh
+
+HTTP/1.1 429 Too Many Requests
+Content-Type: application/json
+Vary: Origin
+Date: Tue, 21 Apr 2026 14:45:37 GMT
+Content-Length: 54
+
+{"error":"Too many requests. Please try again later."}
+=== HTTP 429 in 0.001041s ===
+
+$ GET /api/users/me
+
+HTTP/1.1 404 Not Found
+Content-Type: application/json
+Vary: Origin
+Date: Tue, 21 Apr 2026 14:45:37 GMT
+Content-Length: 21
+
+{"error":"Not found"}
+=== HTTP 404 in 0.000819s ===
+
+
+=== DEMO SUMMARY ===
+1) pagination=FAIL
+2) forbidden=FAIL
+3) me=FAIL
+4) rate_limit=PASS
+5) refresh=FAIL
