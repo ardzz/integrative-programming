@@ -1,0 +1,512 @@
+    Checking blog-api v0.1.0 (/home/reky/college/integrative-programming/week3/blog-api)
+error[E0308]: mismatched types
+   --> tests/comment_test.rs:12:39
+    |
+ 12 |     let post = create_test_post(&app, &token, "Commented Post", "Comment target").await;
+    |                ----------------       ^^^^^^ expected `&str`, found `&AuthTokens`
+    |                |
+    |                arguments to this function are incorrect
+    |
+    = note: expected reference `&str`
+               found reference `&AuthTokens`
+note: function defined here
+   --> tests/common/mod.rs:174:14
+    |
+174 | pub async fn create_test_post(app: &TestApp, token: &str, title: &str, content: &str) -> Value {
+    |              ^^^^^^^^^^^^^^^^                -----------
+
+error[E0308]: mismatched types
+   --> tests/comment_test.rs:32:39
+    |
+ 32 |     let post = create_test_post(&app, &token, "Comment Post", "Post body").await;
+    |                ----------------       ^^^^^^ expected `&str`, found `&AuthTokens`
+    |                |
+    |                arguments to this function are incorrect
+    |
+    = note: expected reference `&str`
+               found reference `&AuthTokens`
+note: function defined here
+   --> tests/common/mod.rs:174:14
+    |
+174 | pub async fn create_test_post(app: &TestApp, token: &str, title: &str, content: &str) -> Value {
+    |              ^^^^^^^^^^^^^^^^                -----------
+
+error[E0308]: mismatched types
+   --> tests/logging_test.rs:46:28
+    |
+ 46 |     create_test_post(&app, &token, "Smoke Test Post", "Content").await;
+    |     ----------------       ^^^^^^ expected `&str`, found `&AuthTokens`
+    |     |
+    |     arguments to this function are incorrect
+    |
+    = note: expected reference `&str`
+               found reference `&AuthTokens`
+note: function defined here
+   --> tests/common/mod.rs:174:14
+    |
+174 | pub async fn create_test_post(app: &TestApp, token: &str, title: &str, content: &str) -> Value {
+    |              ^^^^^^^^^^^^^^^^                -----------
+
+error[E0277]: `AuthTokens` doesn't implement `std::fmt::Display`
+   --> tests/comment_test.rs:38:23
+    |
+ 38 |         .bearer_auth(&token)
+    |          -----------  ^^^^^ unsatisfied trait bound
+    |          |
+    |          required by a bound introduced by this call
+    |
+help: the trait `std::fmt::Display` is not implemented for `AuthTokens`
+   --> tests/common/mod.rs:20:1
+    |
+ 20 | pub struct AuthTokens {
+    | ^^^^^^^^^^^^^^^^^^^^^
+    = note: required for `&AuthTokens` to implement `std::fmt::Display`
+note: required by a bound in `RequestBuilder::bearer_auth`
+   --> /home/reky/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/reqwest-0.12.28/src/async_impl/request.rs:272:12
+    |
+270 |     pub fn bearer_auth<T>(self, token: T) -> RequestBuilder
+    |            ----------- required by a bound in this associated function
+271 |     where
+272 |         T: fmt::Display,
+    |            ^^^^^^^^^^^^ required by this bound in `RequestBuilder::bearer_auth`
+
+error[E0277]: `AuthTokens` doesn't implement `std::fmt::Display`
+   --> tests/post_test.rs:32:23
+    |
+ 32 |         .bearer_auth(&token)
+    |          -----------  ^^^^^ unsatisfied trait bound
+    |          |
+    |          required by a bound introduced by this call
+    |
+help: the trait `std::fmt::Display` is not implemented for `AuthTokens`
+   --> tests/common/mod.rs:20:1
+    |
+ 20 | pub struct AuthTokens {
+    | ^^^^^^^^^^^^^^^^^^^^^
+    = note: required for `&AuthTokens` to implement `std::fmt::Display`
+note: required by a bound in `RequestBuilder::bearer_auth`
+   --> /home/reky/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/reqwest-0.12.28/src/async_impl/request.rs:272:12
+    |
+270 |     pub fn bearer_auth<T>(self, token: T) -> RequestBuilder
+    |            ----------- required by a bound in this associated function
+271 |     where
+272 |         T: fmt::Display,
+    |            ^^^^^^^^^^^^ required by this bound in `RequestBuilder::bearer_auth`
+
+error[E0308]: mismatched types
+   --> tests/comment_test.rs:57:39
+    |
+ 57 |     let post = create_test_post(&app, &token, "Comment Fetch Post", "Post body").await;
+    |                ----------------       ^^^^^^ expected `&str`, found `&AuthTokens`
+    |                |
+    |                arguments to this function are incorrect
+    |
+    = note: expected reference `&str`
+               found reference `&AuthTokens`
+note: function defined here
+   --> tests/common/mod.rs:174:14
+    |
+174 | pub async fn create_test_post(app: &TestApp, token: &str, title: &str, content: &str) -> Value {
+    |              ^^^^^^^^^^^^^^^^                -----------
+
+error[E0308]: mismatched types
+   --> tests/comment_test.rs:59:45
+    |
+ 59 |     let comment = create_test_comment(&app, &token, post_id, "Fetch me").await;
+    |                   -------------------       ^^^^^^ expected `&str`, found `&AuthTokens`
+    |                   |
+    |                   arguments to this function are incorrect
+    |
+    = note: expected reference `&str`
+               found reference `&AuthTokens`
+note: function defined here
+   --> tests/common/mod.rs:192:14
+    |
+192 | pub async fn create_test_comment(app: &TestApp, token: &str, post_id: i32, comment: &str) -> Value {
+    |              ^^^^^^^^^^^^^^^^^^^                -----------
+
+error[E0308]: mismatched types
+   --> tests/comment_test.rs:80:39
+    |
+ 80 |     let post = create_test_post(&app, &token, "Own Comment Post", "Post body").await;
+    |                ----------------       ^^^^^^ expected `&str`, found `&AuthTokens`
+    |                |
+    |                arguments to this function are incorrect
+    |
+    = note: expected reference `&str`
+               found reference `&AuthTokens`
+note: function defined here
+   --> tests/common/mod.rs:174:14
+    |
+174 | pub async fn create_test_post(app: &TestApp, token: &str, title: &str, content: &str) -> Value {
+    |              ^^^^^^^^^^^^^^^^                -----------
+
+error[E0308]: mismatched types
+   --> tests/comment_test.rs:82:45
+    |
+ 82 |     let comment = create_test_comment(&app, &token, post_id, "Before update").await;
+    |                   -------------------       ^^^^^^ expected `&str`, found `&AuthTokens`
+    |                   |
+    |                   arguments to this function are incorrect
+    |
+    = note: expected reference `&str`
+               found reference `&AuthTokens`
+note: function defined here
+   --> tests/common/mod.rs:192:14
+    |
+192 | pub async fn create_test_comment(app: &TestApp, token: &str, post_id: i32, comment: &str) -> Value {
+    |              ^^^^^^^^^^^^^^^^^^^                -----------
+
+For more information about this error, try `rustc --explain E0308`.
+error[E0277]: `AuthTokens` doesn't implement `std::fmt::Display`
+   --> tests/comment_test.rs:88:23
+    |
+ 88 |         .bearer_auth(&token)
+    |          -----------  ^^^^^ unsatisfied trait bound
+    |          |
+    |          required by a bound introduced by this call
+    |
+help: the trait `std::fmt::Display` is not implemented for `AuthTokens`
+   --> tests/common/mod.rs:20:1
+    |
+ 20 | pub struct AuthTokens {
+    | ^^^^^^^^^^^^^^^^^^^^^
+    = note: required for `&AuthTokens` to implement `std::fmt::Display`
+note: required by a bound in `RequestBuilder::bearer_auth`
+   --> /home/reky/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/reqwest-0.12.28/src/async_impl/request.rs:272:12
+    |
+270 |     pub fn bearer_auth<T>(self, token: T) -> RequestBuilder
+    |            ----------- required by a bound in this associated function
+271 |     where
+272 |         T: fmt::Display,
+    |            ^^^^^^^^^^^^ required by this bound in `RequestBuilder::bearer_auth`
+
+error[E0308]: mismatched types
+   --> tests/comment_test.rs:108:39
+    |
+108 |     let post = create_test_post(&app, &owner_token, "Protected Comment Post", "Post body").await;
+    |                ----------------       ^^^^^^^^^^^^ expected `&str`, found `&AuthTokens`
+    |                |
+    |                arguments to this function are incorrect
+    |
+    = note: expected reference `&str`
+               found reference `&AuthTokens`
+note: function defined here
+   --> tests/common/mod.rs:174:14
+    |
+174 | pub async fn create_test_post(app: &TestApp, token: &str, title: &str, content: &str) -> Value {
+    |              ^^^^^^^^^^^^^^^^                -----------
+
+error: could not compile `blog-api` (test "logging_test") due to 1 previous error
+warning: build failed, waiting for other jobs to finish...
+error[E0308]: mismatched types
+   --> tests/comment_test.rs:110:45
+    |
+110 |     let comment = create_test_comment(&app, &owner_token, post_id, "Protected comment").await;
+    |                   -------------------       ^^^^^^^^^^^^ expected `&str`, found `&AuthTokens`
+    |                   |
+    |                   arguments to this function are incorrect
+    |
+    = note: expected reference `&str`
+               found reference `&AuthTokens`
+note: function defined here
+   --> tests/common/mod.rs:192:14
+    |
+192 | pub async fn create_test_comment(app: &TestApp, token: &str, post_id: i32, comment: &str) -> Value {
+    |              ^^^^^^^^^^^^^^^^^^^                -----------
+
+error[E0277]: `AuthTokens` doesn't implement `std::fmt::Display`
+   --> tests/comment_test.rs:116:23
+    |
+116 |         .bearer_auth(&other_token)
+    |          -----------  ^^^^^^^^^^^ unsatisfied trait bound
+    |          |
+    |          required by a bound introduced by this call
+    |
+help: the trait `std::fmt::Display` is not implemented for `AuthTokens`
+   --> tests/common/mod.rs:20:1
+    |
+ 20 | pub struct AuthTokens {
+    | ^^^^^^^^^^^^^^^^^^^^^
+    = note: required for `&AuthTokens` to implement `std::fmt::Display`
+note: required by a bound in `RequestBuilder::bearer_auth`
+   --> /home/reky/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/reqwest-0.12.28/src/async_impl/request.rs:272:12
+    |
+270 |     pub fn bearer_auth<T>(self, token: T) -> RequestBuilder
+    |            ----------- required by a bound in this associated function
+271 |     where
+272 |         T: fmt::Display,
+    |            ^^^^^^^^^^^^ required by this bound in `RequestBuilder::bearer_auth`
+
+error[E0308]: mismatched types
+   --> tests/post_test.rs:72:39
+    |
+ 72 |     let post = create_test_post(&app, &token, "Readable Post", "Readable content").await;
+    |                ----------------       ^^^^^^ expected `&str`, found `&AuthTokens`
+    |                |
+    |                arguments to this function are incorrect
+    |
+    = note: expected reference `&str`
+               found reference `&AuthTokens`
+note: function defined here
+   --> tests/common/mod.rs:174:14
+    |
+174 | pub async fn create_test_post(app: &TestApp, token: &str, title: &str, content: &str) -> Value {
+    |              ^^^^^^^^^^^^^^^^                -----------
+
+error[E0308]: mismatched types
+   --> tests/comment_test.rs:132:39
+    |
+132 |     let post = create_test_post(&app, &token, "Comment Delete Post", "Post body").await;
+    |                ----------------       ^^^^^^ expected `&str`, found `&AuthTokens`
+    |                |
+    |                arguments to this function are incorrect
+    |
+    = note: expected reference `&str`
+               found reference `&AuthTokens`
+note: function defined here
+   --> tests/common/mod.rs:174:14
+    |
+174 | pub async fn create_test_post(app: &TestApp, token: &str, title: &str, content: &str) -> Value {
+    |              ^^^^^^^^^^^^^^^^                -----------
+
+error[E0308]: mismatched types
+   --> tests/comment_test.rs:134:45
+    |
+134 |     let comment = create_test_comment(&app, &token, post_id, "Delete me").await;
+    |                   -------------------       ^^^^^^ expected `&str`, found `&AuthTokens`
+    |                   |
+    |                   arguments to this function are incorrect
+    |
+    = note: expected reference `&str`
+               found reference `&AuthTokens`
+note: function defined here
+   --> tests/common/mod.rs:192:14
+    |
+192 | pub async fn create_test_comment(app: &TestApp, token: &str, post_id: i32, comment: &str) -> Value {
+    |              ^^^^^^^^^^^^^^^^^^^                -----------
+
+error[E0308]: mismatched types
+   --> tests/post_test.rs:107:39
+    |
+107 |     let post = create_test_post(&app, &token, "Old Title", "Old content").await;
+    |                ----------------       ^^^^^^ expected `&str`, found `&AuthTokens`
+    |                |
+    |                arguments to this function are incorrect
+    |
+    = note: expected reference `&str`
+               found reference `&AuthTokens`
+note: function defined here
+   --> tests/common/mod.rs:174:14
+    |
+174 | pub async fn create_test_post(app: &TestApp, token: &str, title: &str, content: &str) -> Value {
+    |              ^^^^^^^^^^^^^^^^                -----------
+
+error[E0277]: `AuthTokens` doesn't implement `std::fmt::Display`
+   --> tests/comment_test.rs:140:23
+    |
+140 |         .bearer_auth(&token)
+    |          -----------  ^^^^^ unsatisfied trait bound
+    |          |
+    |          required by a bound introduced by this call
+    |
+help: the trait `std::fmt::Display` is not implemented for `AuthTokens`
+   --> tests/common/mod.rs:20:1
+    |
+ 20 | pub struct AuthTokens {
+    | ^^^^^^^^^^^^^^^^^^^^^
+    = note: required for `&AuthTokens` to implement `std::fmt::Display`
+note: required by a bound in `RequestBuilder::bearer_auth`
+   --> /home/reky/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/reqwest-0.12.28/src/async_impl/request.rs:272:12
+    |
+270 |     pub fn bearer_auth<T>(self, token: T) -> RequestBuilder
+    |            ----------- required by a bound in this associated function
+271 |     where
+272 |         T: fmt::Display,
+    |            ^^^^^^^^^^^^ required by this bound in `RequestBuilder::bearer_auth`
+
+error[E0277]: `AuthTokens` doesn't implement `std::fmt::Display`
+   --> tests/post_test.rs:113:23
+    |
+113 |         .bearer_auth(&token)
+    |          -----------  ^^^^^ unsatisfied trait bound
+    |          |
+    |          required by a bound introduced by this call
+    |
+help: the trait `std::fmt::Display` is not implemented for `AuthTokens`
+   --> tests/common/mod.rs:20:1
+    |
+ 20 | pub struct AuthTokens {
+    | ^^^^^^^^^^^^^^^^^^^^^
+    = note: required for `&AuthTokens` to implement `std::fmt::Display`
+note: required by a bound in `RequestBuilder::bearer_auth`
+   --> /home/reky/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/reqwest-0.12.28/src/async_impl/request.rs:272:12
+    |
+270 |     pub fn bearer_auth<T>(self, token: T) -> RequestBuilder
+    |            ----------- required by a bound in this associated function
+271 |     where
+272 |         T: fmt::Display,
+    |            ^^^^^^^^^^^^ required by this bound in `RequestBuilder::bearer_auth`
+
+error[E0308]: mismatched types
+   --> tests/comment_test.rs:168:39
+    |
+168 |     let post = create_test_post(&app, &token, "No Auth Comment Post", "Post body").await;
+    |                ----------------       ^^^^^^ expected `&str`, found `&AuthTokens`
+    |                |
+    |                arguments to this function are incorrect
+    |
+    = note: expected reference `&str`
+               found reference `&AuthTokens`
+note: function defined here
+   --> tests/common/mod.rs:174:14
+    |
+174 | pub async fn create_test_post(app: &TestApp, token: &str, title: &str, content: &str) -> Value {
+    |              ^^^^^^^^^^^^^^^^                -----------
+
+error[E0308]: mismatched types
+   --> tests/post_test.rs:136:39
+    |
+136 |     let post = create_test_post(&app, &owner_token, "Protected Post", "Original content").await;
+    |                ----------------       ^^^^^^^^^^^^ expected `&str`, found `&AuthTokens`
+    |                |
+    |                arguments to this function are incorrect
+    |
+    = note: expected reference `&str`
+               found reference `&AuthTokens`
+note: function defined here
+   --> tests/common/mod.rs:174:14
+    |
+174 | pub async fn create_test_post(app: &TestApp, token: &str, title: &str, content: &str) -> Value {
+    |              ^^^^^^^^^^^^^^^^                -----------
+
+error[E0277]: `AuthTokens` doesn't implement `std::fmt::Display`
+   --> tests/post_test.rs:142:23
+    |
+142 |         .bearer_auth(&other_token)
+    |          -----------  ^^^^^^^^^^^ unsatisfied trait bound
+    |          |
+    |          required by a bound introduced by this call
+    |
+help: the trait `std::fmt::Display` is not implemented for `AuthTokens`
+   --> tests/common/mod.rs:20:1
+    |
+ 20 | pub struct AuthTokens {
+    | ^^^^^^^^^^^^^^^^^^^^^
+    = note: required for `&AuthTokens` to implement `std::fmt::Display`
+note: required by a bound in `RequestBuilder::bearer_auth`
+   --> /home/reky/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/reqwest-0.12.28/src/async_impl/request.rs:272:12
+    |
+270 |     pub fn bearer_auth<T>(self, token: T) -> RequestBuilder
+    |            ----------- required by a bound in this associated function
+271 |     where
+272 |         T: fmt::Display,
+    |            ^^^^^^^^^^^^ required by this bound in `RequestBuilder::bearer_auth`
+
+error[E0308]: mismatched types
+   --> tests/post_test.rs:161:39
+    |
+161 |     let post = create_test_post(&app, &token, "Delete Me", "To be deleted").await;
+    |                ----------------       ^^^^^^ expected `&str`, found `&AuthTokens`
+    |                |
+    |                arguments to this function are incorrect
+    |
+    = note: expected reference `&str`
+               found reference `&AuthTokens`
+note: function defined here
+   --> tests/common/mod.rs:174:14
+    |
+174 | pub async fn create_test_post(app: &TestApp, token: &str, title: &str, content: &str) -> Value {
+    |              ^^^^^^^^^^^^^^^^                -----------
+
+error[E0277]: `AuthTokens` doesn't implement `std::fmt::Display`
+   --> tests/post_test.rs:167:23
+    |
+167 |         .bearer_auth(&token)
+    |          -----------  ^^^^^ unsatisfied trait bound
+    |          |
+    |          required by a bound introduced by this call
+    |
+help: the trait `std::fmt::Display` is not implemented for `AuthTokens`
+   --> tests/common/mod.rs:20:1
+    |
+ 20 | pub struct AuthTokens {
+    | ^^^^^^^^^^^^^^^^^^^^^
+    = note: required for `&AuthTokens` to implement `std::fmt::Display`
+note: required by a bound in `RequestBuilder::bearer_auth`
+   --> /home/reky/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/reqwest-0.12.28/src/async_impl/request.rs:272:12
+    |
+270 |     pub fn bearer_auth<T>(self, token: T) -> RequestBuilder
+    |            ----------- required by a bound in this associated function
+271 |     where
+272 |         T: fmt::Display,
+    |            ^^^^^^^^^^^^ required by this bound in `RequestBuilder::bearer_auth`
+
+error[E0308]: mismatched types
+   --> tests/post_test.rs:183:39
+    |
+183 |     let post = create_test_post(&app, &owner_token, "Cant Delete", "Protected").await;
+    |                ----------------       ^^^^^^^^^^^^ expected `&str`, found `&AuthTokens`
+    |                |
+    |                arguments to this function are incorrect
+    |
+    = note: expected reference `&str`
+               found reference `&AuthTokens`
+note: function defined here
+   --> tests/common/mod.rs:174:14
+    |
+174 | pub async fn create_test_post(app: &TestApp, token: &str, title: &str, content: &str) -> Value {
+    |              ^^^^^^^^^^^^^^^^                -----------
+
+error[E0277]: `AuthTokens` doesn't implement `std::fmt::Display`
+   --> tests/post_test.rs:189:23
+    |
+189 |         .bearer_auth(&other_token)
+    |          -----------  ^^^^^^^^^^^ unsatisfied trait bound
+    |          |
+    |          required by a bound introduced by this call
+    |
+help: the trait `std::fmt::Display` is not implemented for `AuthTokens`
+   --> tests/common/mod.rs:20:1
+    |
+ 20 | pub struct AuthTokens {
+    | ^^^^^^^^^^^^^^^^^^^^^
+    = note: required for `&AuthTokens` to implement `std::fmt::Display`
+note: required by a bound in `RequestBuilder::bearer_auth`
+   --> /home/reky/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/reqwest-0.12.28/src/async_impl/request.rs:272:12
+    |
+270 |     pub fn bearer_auth<T>(self, token: T) -> RequestBuilder
+    |            ----------- required by a bound in this associated function
+271 |     where
+272 |         T: fmt::Display,
+    |            ^^^^^^^^^^^^ required by this bound in `RequestBuilder::bearer_auth`
+
+error[E0277]: `AuthTokens` doesn't implement `std::fmt::Display`
+   --> tests/post_test.rs:206:23
+    |
+206 |         .bearer_auth(&token)
+    |          -----------  ^^^^^ unsatisfied trait bound
+    |          |
+    |          required by a bound introduced by this call
+    |
+help: the trait `std::fmt::Display` is not implemented for `AuthTokens`
+   --> tests/common/mod.rs:20:1
+    |
+ 20 | pub struct AuthTokens {
+    | ^^^^^^^^^^^^^^^^^^^^^
+    = note: required for `&AuthTokens` to implement `std::fmt::Display`
+note: required by a bound in `RequestBuilder::bearer_auth`
+   --> /home/reky/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/reqwest-0.12.28/src/async_impl/request.rs:272:12
+    |
+270 |     pub fn bearer_auth<T>(self, token: T) -> RequestBuilder
+    |            ----------- required by a bound in this associated function
+271 |     where
+272 |         T: fmt::Display,
+    |            ^^^^^^^^^^^^ required by this bound in `RequestBuilder::bearer_auth`
+
+Some errors have detailed explanations: E0277, E0308.
+For more information about an error, try `rustc --explain E0277`.
+error: could not compile `blog-api` (test "comment_test") due to 15 previous errors
+error: could not compile `blog-api` (test "post_test") due to 11 previous errors
+cargo build (0 crates compiled)
+[full output: ~/.local/share/rtk/tee/1776777388_cargo_check.log]

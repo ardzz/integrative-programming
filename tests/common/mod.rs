@@ -17,8 +17,20 @@ pub struct TestApp {
     pub client: Client,
 }
 
+pub struct AuthTokens {
+    pub access: String,
+    pub refresh: String,
+}
+
 pub async fn spawn_app() -> TestApp {
     dotenvy::dotenv().ok();
+
+    // Default rate limiting to disabled for tests so parallel runs don't hit
+    // spurious 429s. Individual tests (e.g., rate_limit_test) may override
+    // this by setting the env var before calling spawn_app().
+    if std::env::var("RATE_LIMIT_ENABLED").is_err() {
+        std::env::set_var("RATE_LIMIT_ENABLED", "false");
+    }
 
     let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL");
     ensure_test_database_ready(&database_url).await;
@@ -88,12 +100,26 @@ pub fn unique_email(prefix: &str) -> String {
     format!("{}{}@t.io", short_prefix, &suffix[..8])
 }
 
+fn parse_auth_tokens(body: &Value) -> AuthTokens {
+    let access = body["access_token"]
+        .as_str()
+        .expect("access_token should be present")
+        .to_string();
+    let refresh = body["refresh_token"]
+        .as_str()
+        .expect("refresh_token should be present")
+        .to_string();
+    assert!(!access.is_empty(), "access_token should be non-empty");
+    assert!(!refresh.is_empty(), "refresh_token should be non-empty");
+    AuthTokens { access, refresh }
+}
+
 pub async fn register_user(
     app: &TestApp,
     name: &str,
     email: &str,
     password: &str,
-) -> (String, Value) {
+) -> (AuthTokens, Value) {
     let response = app
         .client
         .post(format!("{}/api/auth/register", app.base_url))
@@ -108,11 +134,11 @@ pub async fn register_user(
 
     assert_eq!(response.status(), StatusCode::CREATED);
     let body: Value = response.json().await.expect("register body should be json");
-    let token = body["token"].as_str().expect("token should be present").to_string();
-    (token, body)
+    let tokens = parse_auth_tokens(&body);
+    (tokens, body)
 }
 
-pub async fn login_user(app: &TestApp, email: &str, password: &str) -> String {
+pub async fn login_user(app: &TestApp, email: &str, password: &str) -> AuthTokens {
     let response = app
         .client
         .post(format!("{}/api/auth/login", app.base_url))
@@ -126,10 +152,23 @@ pub async fn login_user(app: &TestApp, email: &str, password: &str) -> String {
 
     assert_eq!(response.status(), StatusCode::OK);
     let body: Value = response.json().await.expect("login body should be json");
-    body["token"]
-        .as_str()
-        .expect("token should be present")
-        .to_string()
+    parse_auth_tokens(&body)
+}
+
+pub async fn refresh_tokens(app: &TestApp, refresh: &str) -> AuthTokens {
+    let response = app
+        .client
+        .post(format!("{}/api/auth/refresh", app.base_url))
+        .json(&json!({
+            "refresh_token": refresh,
+        }))
+        .send()
+        .await
+        .expect("refresh request should succeed");
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body: Value = response.json().await.expect("refresh body should be json");
+    parse_auth_tokens(&body)
 }
 
 pub async fn create_test_post(app: &TestApp, token: &str, title: &str, content: &str) -> Value {
