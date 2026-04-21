@@ -24,6 +24,9 @@ services:
     environment:
       DATABASE_URL: "mysql://blog_user:blog_password@mysql:3306/blog_db"
       JWT_SECRET: "change-me-in-production"
+      RATE_LIMIT_ENABLED: "true"
+      ACCESS_TOKEN_TTL_MINUTES: "15"
+      REFRESH_TOKEN_TTL_DAYS: "7"
       RUST_LOG: "blog_api=debug,tower_http=debug"
     depends_on:
       mysql: { condition: service_healthy }

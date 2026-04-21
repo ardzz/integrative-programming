@@ -1,0 +1,63 @@
+time="2026-04-21T21:09:40+07:00" level=warning msg="/home/reky/college/integrative-programming/week3/blog-api/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+name: blog-api
+services:
+  api:
+    build:
+      context: /home/reky/college/integrative-programming/week3/blog-api
+      dockerfile: Dockerfile
+    depends_on:
+      mysql:
+        condition: service_healthy
+        required: true
+    environment:
+      ACCESS_TOKEN_TTL_MINUTES: "15"
+      DATABASE_URL: mysql://blog_user:blog_password@mysql:3306/blog_db
+      JWT_SECRET: change-me-in-production
+      RATE_LIMIT_ENABLED: "true"
+      REFRESH_TOKEN_TTL_DAYS: "7"
+      RUST_LOG: blog_api=debug,tower_http=debug
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 3000
+        published: "3000"
+        protocol: tcp
+  mysql:
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_DATABASE: blog_db
+      MYSQL_PASSWORD: blog_password
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_USER: blog_user
+    healthcheck:
+      test:
+        - CMD
+        - mysqladmin
+        - ping
+        - -h
+        - localhost
+      interval: 10s
+      retries: 5
+      start_period: 30s
+    image: mysql:8.0
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 3306
+        published: "3306"
+        protocol: tcp
+    volumes:
+      - type: volume
+        source: mysql_data
+        target: /var/lib/mysql
+        volume: {}
+networks:
+  default:
+    name: blog-api_default
+volumes:
+  mysql_data:
+    name: blog-api_mysql_data
