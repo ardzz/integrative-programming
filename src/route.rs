@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{sync::Arc, time::Duration};
 
 use axum::{
     extract::MatchedPath,
@@ -9,6 +9,7 @@ use axum::{
 };
 use serde_json::json;
 use tower::ServiceBuilder;
+use tower_governor::{governor::GovernorConfigBuilder, GovernorLayer};
 use tower_http::cors::CorsLayer;
 use tower_http::classify::ServerErrorsFailureClass;
 use tower_http::request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer};
@@ -17,6 +18,29 @@ use tracing::{info_span, Span};
 
 use crate::handler::{auth, comment, post as post_handler, user};
 use crate::AppState;
+
+fn rate_limit_enabled() -> bool {
+    std::env::var("RATE_LIMIT_ENABLED")
+        .unwrap_or_else(|_| "true".into())
+        == "true"
+}
+
+fn with_rate_limit<S>(router: Router<S>, per_second: u64, burst_size: u32) -> Router<S>
+where
+    S: Clone + Send + Sync + 'static,
+{
+    if rate_limit_enabled() {
+        let config = GovernorConfigBuilder::default()
+            .per_second(per_second)
+            .burst_size(burst_size)
+            .finish()
+            .expect("valid rate limit config");
+
+        router.layer(GovernorLayer { config: Arc::new(config) })
+    } else {
+        router
+    }
+}
 
 pub fn create_router(state: AppState) -> Router {
     let trace_layer = TraceLayer::new_for_http()
@@ -56,16 +80,20 @@ pub fn create_router(state: AppState) -> Router {
 
     let auth_routes = Router::new()
         .route("/register", post(auth::register))
-        .route("/login", post(auth::login));
+        .route("/login", post(auth::login))
+        .route("/refresh", post(auth::refresh));
+
+    let auth_routes = with_rate_limit(auth_routes, 12, 5);
 
     let user_routes = Router::new()
         .route("/", get(user::list_users))
         .route(
-            "/{id}",
-            get(user::get_user)
-                .put(user::update_user)
-                .delete(user::delete_user),
-        );
+            "/me",
+            get(user::get_me)
+                .put(user::update_me)
+                .delete(user::delete_me),
+        )
+        .route("/{id}", get(user::get_user));
 
     let post_routes = Router::new()
         .route(
@@ -89,11 +117,16 @@ pub fn create_router(state: AppState) -> Router {
                 .delete(comment::delete_comment),
         );
 
+    let api_routes = Router::new()
+        .nest("/auth", auth_routes)
+        .nest("/users", user_routes)
+        .nest("/posts", post_routes);
+
+    let api_routes = with_rate_limit(api_routes, 1, 60);
+
     Router::new()
         .route("/health", get(health_check))
-        .nest("/api/auth", auth_routes)
-        .nest("/api/users", user_routes)
-        .nest("/api/posts", post_routes)
+        .nest("/api", api_routes)
         .layer(
             ServiceBuilder::new()
                 .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid))

@@ -5,7 +5,6 @@ use reqwest::StatusCode;
 use serde_json::json;
 
 #[tokio::test]
-#[ignore = "awaits T10 route wiring"]
 async fn test_get_me_returns_current_user() {
     let app = spawn_app().await;
     let email = unique_email("user-me-get");
@@ -26,7 +25,6 @@ async fn test_get_me_returns_current_user() {
 }
 
 #[tokio::test]
-#[ignore = "awaits T10 route wiring"]
 async fn test_update_me_updates_own_account() {
     let app = spawn_app().await;
     let email = unique_email("user-me-put");
@@ -50,7 +48,6 @@ async fn test_update_me_updates_own_account() {
 }
 
 #[tokio::test]
-#[ignore = "awaits T10 route wiring"]
 async fn test_delete_me_hard_deletes_user() {
     let app = spawn_app().await;
     let email = unique_email("user-me-del");

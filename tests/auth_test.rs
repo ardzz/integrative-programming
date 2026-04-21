@@ -114,7 +114,6 @@ async fn test_login_returns_both_tokens() {
 }
 
 #[tokio::test]
-#[ignore = "awaits T10 route wiring"]
 async fn test_refresh_with_valid_refresh_token_returns_new_pair() {
     let app = spawn_app().await;
     let email = unique_email("refresh-valid");
@@ -142,7 +141,6 @@ async fn test_refresh_with_valid_refresh_token_returns_new_pair() {
 }
 
 #[tokio::test]
-#[ignore = "awaits T10 route wiring"]
 async fn test_refresh_with_access_token_returns_401() {
     let app = spawn_app().await;
     let email = unique_email("refresh-access");
@@ -162,7 +160,6 @@ async fn test_refresh_with_access_token_returns_401() {
 }
 
 #[tokio::test]
-#[ignore = "awaits T10 route wiring"]
 async fn test_refresh_with_empty_string_returns_400() {
     let app = spawn_app().await;
 
