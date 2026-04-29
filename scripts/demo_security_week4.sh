@@ -67,6 +67,19 @@ print_divider() {
   printf '\n===== %s =====\n' "$1"
 }
 
+confirm_next_scene() {
+  local scene="$1"
+  local answer
+
+  printf '\nNext scene: %s\n' "$scene"
+  read -r -p "Press Enter to continue, or type q to quit: " answer
+
+  if [[ "$answer" == "q" || "$answer" == "Q" ]]; then
+    echo "Demo stopped by user."
+    exit 0
+  fi
+}
+
 run_curl() {
   local step="$1"
   local method="$2"
@@ -146,6 +159,7 @@ run_curl "03-register-user-c" POST /api/auth/register "" "{\"name\":\"Week4 User
 USER_C_REGISTER_RAW="$LAST_BODY"
 USER_C_ACCESS="$(jq -r '.access_token // empty' <<<"$USER_C_REGISTER_RAW")"
 
+confirm_next_scene '1. Pagination Demo'
 print_divider '1. Pagination Demo'
 run_curl "04-pagination-posts-valid" GET '/api/posts?page=1&per_page=2' "$USER_A_ACCESS"
 PAGINATION_VALID_STATUS="$LAST_STATUS"
@@ -156,6 +170,7 @@ if [[ "$PAGINATION_VALID_STATUS" == "200" && "$PAGINATION_VALID_HAS_DATA" == "tr
   SCENARIO_PAGINATION=PASS
 fi
 
+confirm_next_scene '2. 403 Forbidden Demo'
 print_divider '2. 403 Forbidden Demo'
 run_curl "06-create-post-user-a" POST /api/posts "$USER_A_ACCESS" '{"title":"Week 4 Security Demo Post","content":"Owned by User A","status":"published"}'
 POST_ID="$(jq -r '.id // empty' <<<"$LAST_BODY")"
@@ -167,6 +182,7 @@ if [[ -n "$POST_ID" && "$FORBIDDEN_UPDATE_STATUS" == "403" && "$FORBIDDEN_DELETE
   SCENARIO_FORBIDDEN=PASS
 fi
 
+confirm_next_scene '3. /me Endpoint Demo'
 print_divider '3. /me Endpoint Demo'
 run_curl "09-users-me-get" GET /api/users/me "$USER_A_ACCESS"
 ME_GET_STATUS="$LAST_STATUS"
@@ -181,6 +197,7 @@ if [[ "$ME_GET_STATUS" == "200" && "$ME_PUT_STATUS" == "200" && "$ME_EMAIL" == "
   SCENARIO_ME=PASS
 fi
 
+confirm_next_scene '4. Rate Limiting Demo'
 print_divider '4. Rate Limiting Demo'
 run_rate_limit_burst "12-rate-limit-login-burst"
 RATE_LIMIT_429_COUNT="$(grep -c '=== HTTP 429 in' <<<"$LAST_RATE_LIMIT_RAW" || true)"
@@ -191,11 +208,14 @@ fi
 printf 'Waiting %ss for auth rate-limit window to cool down before refresh flow.\n' "$RATE_LIMIT_COOLDOWN_SECONDS"
 sleep "$RATE_LIMIT_COOLDOWN_SECONDS"
 
+confirm_next_scene '5. Refresh Token Flow Demo'
 print_divider '5. Refresh Token Flow Demo'
 run_curl "13-login-user-a" POST /api/auth/login "" "{\"email\":\"${USER_A_EMAIL}\",\"password\":\"${PASSWORD}\"}"
 LOGIN_STATUS="$LAST_STATUS"
 LOGIN_ACCESS="$(jq -r '.access_token // empty' <<<"$LAST_BODY")"
 LOGIN_REFRESH="$(jq -r '.refresh_token // empty' <<<"$LAST_BODY")"
+# JWT iat resolusi 1 detik; pastikan token baru beda dari token login.
+sleep 1
 run_curl "14-refresh-valid" POST /api/auth/refresh "" "{\"refresh_token\":\"${LOGIN_REFRESH}\"}"
 REFRESH_OK_STATUS="$LAST_STATUS"
 NEW_ACCESS="$(jq -r '.access_token // empty' <<<"$LAST_BODY")"

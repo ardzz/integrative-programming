@@ -1,5 +1,6 @@
 use blog_api::{route, AppState};
 use sqlx::mysql::MySqlPoolOptions;
+use std::net::SocketAddr;
 use std::time::Duration;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
 
@@ -45,9 +46,9 @@ async fn main() {
     let app = route::create_router(state);
 
     // 7. Bind and serve
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000")
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    tracing::info!("listening on {}", listener.local_addr().unwrap());
+    axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>())
         .await
         .unwrap();
-    tracing::info!("listening on {}", listener.local_addr().unwrap());
-    axum::serve(listener, app).await.unwrap();
 }
