@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  check:
+    name: Format + Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache cargo registry
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: blog-api
+
+      - name: cargo fmt --check
+        working-directory: blog-api
+        run: cargo fmt --all -- --check
+
+      - name: cargo clippy
+        working-directory: blog-api
+        run: cargo clippy --all-targets -- -D warnings
+
+  test:
+    name: Test (MySQL service container)
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: rootpassword
+          MYSQL_DATABASE: blog_db
+          MYSQL_USER: blog_user
+          MYSQL_PASSWORD: blog_password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h localhost"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+          --health-start-period 30s
+
+    env:
+      DATABASE_URL: mysql://blog_user:blog_password@127.0.0.1:3306/blog_db
+      JWT_SECRET: ci-only-secret-do-not-use-in-prod
+      RATE_LIMIT_ENABLED: "false"
+      ACCESS_TOKEN_TTL_MINUTES: "15"
+      REFRESH_TOKEN_TTL_DAYS: "7"
+      RUST_LOG: blog_api=info,tower_http=info
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: blog-api
+
+      - name: Wait for MySQL to accept connections
+        run: |
+          for i in {1..30}; do
+            if mysqladmin ping -h 127.0.0.1 -P 3306 --silent 2>/dev/null; then
+              echo "MySQL ready"
+              exit 0
+            fi
+            echo "waiting for mysql... ($i/30)"
+            sleep 2
+          done
+          echo "MySQL did not become ready in time" >&2
+          exit 1
+
+      - name: cargo test
+        working-directory: blog-api
+        run: cargo test --tests -- --test-threads=1
