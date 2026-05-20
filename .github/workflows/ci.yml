@@ -24,15 +24,11 @@ jobs:
 
       - name: Cache cargo registry
         uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: blog-api
 
       - name: cargo fmt --check
-        working-directory: blog-api
         run: cargo fmt --all -- --check
 
       - name: cargo clippy
-        working-directory: blog-api
         run: cargo clippy --all-targets -- -D warnings
 
   test:
@@ -72,8 +68,6 @@ jobs:
 
       - name: Cache cargo registry
         uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: blog-api
 
       - name: Wait for MySQL to accept connections
         run: |
@@ -89,5 +83,4 @@ jobs:
           exit 1
 
       - name: cargo test
-        working-directory: blog-api
         run: cargo test --tests -- --test-threads=1
