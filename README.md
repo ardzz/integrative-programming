@@ -1,6 +1,12 @@
 # Blog API
 
+[![CI](https://github.com/ardzz/integrative-programming/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/ardzz/integrative-programming/actions/workflows/ci.yml)
+[![Rust](https://img.shields.io/badge/rust-1.85%2B-orange?logo=rust)](https://www.rust-lang.org)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 A RESTful blog API built with Rust, Axum, and MySQL. Outputs structured JSON logs compatible with [Gonzo](https://github.com/control-theory/gonzo) for real-time log analysis.
+
+CI runs four parallel jobs on every push: `Format + Clippy`, `MSRV (Rust 1.85)`, `Cargo Deny (advisories + licenses + bans)`, and `Test (MySQL service container)`. See the [Actions tab](https://github.com/ardzz/integrative-programming/actions) for the live build status.
 
 ## Tech Stack
 
