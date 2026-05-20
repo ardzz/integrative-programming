@@ -1,3 +1,8 @@
 - cargo init created a standard binary scaffold, and cargo check succeeded after locking dependencies.
 - The requested dependency set resolves cleanly with axum 0.8 / sqlx 0.8 / tokio 1.
 - .env should stay ignored by git; .env.example carries the shareable defaults.
+- Integration tests can spin up the real Axum app on random ports and share helpers from tests/common/mod.rs for auth, posts, and comments.
+- The current MySQL schema uses TIMESTAMP columns, but the app models decode them as chrono::NaiveDateTime/DATETIME; test setup must normalize those columns before exercising DB-backed handlers.
+- Switching the schema migrations themselves to DATETIME removes the need for the test-only ALTER TABLE compatibility workaround and fixes Docker runtime decoding errors.
+- `cargo sqlx prepare` reports `warning: no queries found` for this codebase because handlers use runtime `sqlx::query`/`query_as` APIs rather than compile-time `query!` macros, so `.sqlx/` remains empty even though the command succeeds.
+- Docker E2E passed after rebuilding with the DATETIME migrations: health, register, login, create/list posts, create/list comments, and delete comment/post all returned expected status codes.

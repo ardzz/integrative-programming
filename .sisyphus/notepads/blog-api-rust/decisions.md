@@ -1,2 +1,6 @@
 - Kept src/main.rs as the default cargo-init placeholder only.
 - Preserved the exact dependency versions/features requested in Cargo.toml.
+- Added src/lib.rs so integration tests can import AppState and route::create_router from the package library target while keeping the binary entrypoint thin.
+- Centralized test bootstrapping in tests/common/mod.rs and used a one-time database compatibility setup before spawning per-test servers.
+- Standardized all migration timestamp columns on DATETIME so application models, tests, and Docker runtime behavior share one schema contract.
+- Kept the Dockerfile SQLX offline wiring in place, but did not convert runtime SQLx calls to `query!` macros; that preserves handler behavior while accepting an empty `.sqlx/` directory.
