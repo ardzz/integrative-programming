@@ -10,12 +10,7 @@ async fn test_pagination_envelope_shape() {
     let (tokens, _) = register_user(&app, "Pagination Shape", &email, "qwerty").await;
     create_test_post(&app, &tokens.access, "Shape Post", "Shape Content").await;
 
-    let response = app
-        .client
-        .get(format!("{}/api/posts", app.base_url))
-        .send()
-        .await
-        .unwrap();
+    let response = app.client.get(app.api_path("/posts")).send().await.unwrap();
 
     assert_eq!(response.status(), StatusCode::OK);
     let body: serde_json::Value = response.json().await.unwrap();
@@ -30,12 +25,7 @@ async fn test_pagination_envelope_shape() {
 async fn test_pagination_defaults_to_page_1_per_page_10() {
     let app = spawn_app().await;
 
-    let response = app
-        .client
-        .get(format!("{}/api/posts", app.base_url))
-        .send()
-        .await
-        .unwrap();
+    let response = app.client.get(app.api_path("/posts")).send().await.unwrap();
 
     assert_eq!(response.status(), StatusCode::OK);
     let body: serde_json::Value = response.json().await.unwrap();
@@ -52,7 +42,7 @@ async fn test_pagination_page_beyond_total_returns_empty_data() {
 
     let response = app
         .client
-        .get(format!("{}/api/posts?per_page=5&page=999", app.base_url))
+        .get(app.api_path("/posts?per_page=5&page=999"))
         .send()
         .await
         .unwrap();

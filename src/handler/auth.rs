@@ -5,8 +5,7 @@ use tracing::{info, instrument, warn};
 use validator::Validate;
 
 use crate::auth::{
-    create_access_token, create_refresh_token, hash_password, verify_password,
-    verify_refresh_token,
+    create_access_token, create_refresh_token, hash_password, verify_password, verify_refresh_token,
 };
 use crate::error::AppError;
 use crate::model::user::{UserResponse, UserRow};
@@ -85,14 +84,22 @@ pub async fn login(
     {
         Some(user) => user,
         None => {
-            warn!(event = "auth.login.failure", reason = "user_not_found", "Login failed");
+            warn!(
+                event = "auth.login.failure",
+                reason = "user_not_found",
+                "Login failed"
+            );
             return Err(AppError::Unauthorized);
         }
     };
 
     let valid = verify_password(&input.password, &user.password)?;
     if !valid {
-        warn!(event = "auth.login.failure", reason = "invalid_password", "Login failed");
+        warn!(
+            event = "auth.login.failure",
+            reason = "invalid_password",
+            "Login failed"
+        );
         return Err(AppError::Unauthorized);
     }
 

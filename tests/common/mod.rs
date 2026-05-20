@@ -1,5 +1,7 @@
 #![allow(dead_code)]
 
+pub mod fixtures;
+
 use std::time::Duration;
 
 use blog_api::{route::create_router, AppState};
@@ -12,9 +14,29 @@ use uuid::Uuid;
 
 static DB_SETUP: OnceCell<()> = OnceCell::const_new();
 
+/// Common API prefix used by all versioned endpoints.
+///
+/// Centralised so that route version bumps (e.g. `/api/v1` -> `/api/v2`)
+/// only require a single edit, not changes to every test helper.
+pub const API_PREFIX: &str = "/api/v1";
+
 pub struct TestApp {
     pub base_url: String,
     pub client: Client,
+}
+
+impl TestApp {
+    /// Build a fully-qualified URL under the versioned API prefix.
+    ///
+    /// Example: `app.api_path("/auth/login")` -> `http://127.0.0.1:1234/api/v1/auth/login`.
+    pub fn api_path(&self, route: &str) -> String {
+        format!("{}{}{}", self.base_url, API_PREFIX, route)
+    }
+
+    /// Build a fully-qualified URL outside the API prefix (e.g. `/health`).
+    pub fn root_path(&self, route: &str) -> String {
+        format!("{}{}", self.base_url, route)
+    }
 }
 
 pub struct AuthTokens {
@@ -82,7 +104,7 @@ async fn ensure_test_database_ready(database_url: &str) {
 
 async fn wait_for_health(app: &TestApp) {
     for _ in 0..20 {
-        if let Ok(response) = app.client.get(format!("{}/health", app.base_url)).send().await {
+        if let Ok(response) = app.client.get(app.root_path("/health")).send().await {
             if response.status() == StatusCode::OK {
                 return;
             }
@@ -122,7 +144,7 @@ pub async fn register_user(
 ) -> (AuthTokens, Value) {
     let response = app
         .client
-        .post(format!("{}/api/auth/register", app.base_url))
+        .post(app.api_path("/auth/register"))
         .json(&json!({
             "name": name,
             "email": email,
@@ -141,7 +163,7 @@ pub async fn register_user(
 pub async fn login_user(app: &TestApp, email: &str, password: &str) -> AuthTokens {
     let response = app
         .client
-        .post(format!("{}/api/auth/login", app.base_url))
+        .post(app.api_path("/auth/login"))
         .json(&json!({
             "email": email,
             "password": password,
@@ -158,7 +180,7 @@ pub async fn login_user(app: &TestApp, email: &str, password: &str) -> AuthToken
 pub async fn refresh_tokens(app: &TestApp, refresh: &str) -> AuthTokens {
     let response = app
         .client
-        .post(format!("{}/api/auth/refresh", app.base_url))
+        .post(app.api_path("/auth/refresh"))
         .json(&json!({
             "refresh_token": refresh,
         }))
@@ -174,7 +196,7 @@ pub async fn refresh_tokens(app: &TestApp, refresh: &str) -> AuthTokens {
 pub async fn create_test_post(app: &TestApp, token: &str, title: &str, content: &str) -> Value {
     let response = app
         .client
-        .post(format!("{}/api/posts", app.base_url))
+        .post(app.api_path("/posts"))
         .bearer_auth(token)
         .json(&json!({
             "title": title,
@@ -192,7 +214,7 @@ pub async fn create_test_post(app: &TestApp, token: &str, title: &str, content: 
 pub async fn create_test_comment(app: &TestApp, token: &str, post_id: i32, comment: &str) -> Value {
     let response = app
         .client
-        .post(format!("{}/api/posts/{post_id}/comments", app.base_url))
+        .post(app.api_path(&format!("/posts/{post_id}/comments")))
         .bearer_auth(token)
         .json(&json!({
             "comment": comment,

@@ -1,6 +1,9 @@
 mod common;
 
-use common::{assert_error_message, create_test_comment, create_test_post, register_user, spawn_app, unique_email};
+use common::{
+    assert_error_message, create_test_comment, create_test_post, register_user, spawn_app,
+    unique_email,
+};
 use reqwest::StatusCode;
 use serde_json::json;
 
@@ -14,7 +17,7 @@ async fn test_list_comments_returns_200() {
 
     let response = app
         .client
-        .get(format!("{}/api/posts/{post_id}/comments", app.base_url))
+        .get(app.api_path(&format!("/posts/{post_id}/comments")))
         .send()
         .await
         .unwrap();
@@ -35,7 +38,7 @@ async fn test_create_comment_returns_201() {
 
     let response = app
         .client
-        .post(format!("{}/api/posts/{post_id}/comments", app.base_url))
+        .post(app.api_path(&format!("/posts/{post_id}/comments")))
         .bearer_auth(&tokens.access)
         .json(&json!({
             "comment": "Nice post"
@@ -62,7 +65,7 @@ async fn test_get_comment_returns_200() {
 
     let response = app
         .client
-        .get(format!("{}/api/posts/{post_id}/comments/{comment_id}", app.base_url))
+        .get(app.api_path(&format!("/posts/{post_id}/comments/{comment_id}")))
         .send()
         .await
         .unwrap();
@@ -85,7 +88,7 @@ async fn test_update_own_comment_returns_200() {
 
     let response = app
         .client
-        .put(format!("{}/api/posts/{post_id}/comments/{comment_id}", app.base_url))
+        .put(app.api_path(&format!("/posts/{post_id}/comments/{comment_id}")))
         .bearer_auth(&tokens.access)
         .json(&json!({
             "comment": "After update"
@@ -106,14 +109,21 @@ async fn test_update_others_comment_returns_403() {
     let other_email = unique_email("comment-update-other-actor");
     let (owner_tokens, _) = register_user(&app, "Comment Owner", &owner_email, "qwerty").await;
     let (other_tokens, _) = register_user(&app, "Comment Intruder", &other_email, "qwerty").await;
-    let post = create_test_post(&app, &owner_tokens.access, "Protected Comment Post", "Post body").await;
+    let post = create_test_post(
+        &app,
+        &owner_tokens.access,
+        "Protected Comment Post",
+        "Post body",
+    )
+    .await;
     let post_id = post["id"].as_i64().unwrap() as i32;
-    let comment = create_test_comment(&app, &owner_tokens.access, post_id, "Protected comment").await;
+    let comment =
+        create_test_comment(&app, &owner_tokens.access, post_id, "Protected comment").await;
     let comment_id = comment["id"].as_i64().unwrap();
 
     let response = app
         .client
-        .put(format!("{}/api/posts/{post_id}/comments/{comment_id}", app.base_url))
+        .put(app.api_path(&format!("/posts/{post_id}/comments/{comment_id}")))
         .bearer_auth(&other_tokens.access)
         .json(&json!({
             "comment": "Hijacked"
@@ -132,14 +142,20 @@ async fn test_delete_others_comment_returns_403() {
     let other_email = unique_email("comment-delete-other-actor");
     let (owner_tokens, _) = register_user(&app, "Comment Owner", &owner_email, "qwerty").await;
     let (other_tokens, _) = register_user(&app, "Comment Intruder", &other_email, "qwerty").await;
-    let post = create_test_post(&app, &owner_tokens.access, "Protected Delete Post", "Post body").await;
+    let post = create_test_post(
+        &app,
+        &owner_tokens.access,
+        "Protected Delete Post",
+        "Post body",
+    )
+    .await;
     let post_id = post["id"].as_i64().unwrap() as i32;
     let comment = create_test_comment(&app, &owner_tokens.access, post_id, "Protected").await;
     let comment_id = comment["id"].as_i64().unwrap();
 
     let response = app
         .client
-        .delete(format!("{}/api/posts/{post_id}/comments/{comment_id}", app.base_url))
+        .delete(app.api_path(&format!("/posts/{post_id}/comments/{comment_id}")))
         .bearer_auth(&other_tokens.access)
         .send()
         .await
@@ -160,7 +176,7 @@ async fn test_delete_own_comment_returns_204() {
 
     let response = app
         .client
-        .delete(format!("{}/api/posts/{post_id}/comments/{comment_id}", app.base_url))
+        .delete(app.api_path(&format!("/posts/{post_id}/comments/{comment_id}")))
         .bearer_auth(&tokens.access)
         .send()
         .await
@@ -176,7 +192,7 @@ async fn test_comments_on_nonexistent_post_returns_404() {
 
     let response = app
         .client
-        .get(format!("{}/api/posts/99999/comments", app.base_url))
+        .get(app.api_path("/posts/99999/comments"))
         .send()
         .await
         .unwrap();
@@ -194,7 +210,7 @@ async fn test_create_comment_without_auth_returns_401() {
 
     let response = app
         .client
-        .post(format!("{}/api/posts/{post_id}/comments", app.base_url))
+        .post(app.api_path(&format!("/posts/{post_id}/comments")))
         .json(&json!({
             "comment": "Anonymous"
         }))
@@ -224,10 +240,7 @@ async fn test_list_comments_paginated() {
 
     let response = app
         .client
-        .get(format!(
-            "{}/api/posts/{post_id}/comments?per_page=2",
-            app.base_url
-        ))
+        .get(app.api_path(&format!("/posts/{post_id}/comments?per_page=2")))
         .send()
         .await
         .unwrap();
@@ -250,7 +263,7 @@ async fn test_list_comments_for_empty_post_returns_empty_data_total_0() {
 
     let response = app
         .client
-        .get(format!("{}/api/posts/{post_id}/comments", app.base_url))
+        .get(app.api_path(&format!("/posts/{post_id}/comments")))
         .send()
         .await
         .unwrap();

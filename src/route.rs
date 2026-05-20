@@ -10,8 +10,8 @@ use axum::{
 use serde_json::json;
 use tower::ServiceBuilder;
 use tower_governor::{governor::GovernorConfigBuilder, GovernorLayer};
-use tower_http::cors::CorsLayer;
 use tower_http::classify::ServerErrorsFailureClass;
+use tower_http::cors::CorsLayer;
 use tower_http::request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer};
 use tower_http::trace::TraceLayer;
 use tracing::{info_span, Span};
@@ -20,9 +20,7 @@ use crate::handler::{auth, comment, post as post_handler, user};
 use crate::AppState;
 
 fn rate_limit_enabled() -> bool {
-    std::env::var("RATE_LIMIT_ENABLED")
-        .unwrap_or_else(|_| "true".into())
-        == "true"
+    std::env::var("RATE_LIMIT_ENABLED").unwrap_or_else(|_| "true".into()) == "true"
 }
 
 fn with_rate_limit<S>(router: Router<S>, per_second: u64, burst_size: u32) -> Router<S>
@@ -36,7 +34,9 @@ where
             .finish()
             .expect("valid rate limit config");
 
-        router.layer(GovernorLayer { config: Arc::new(config) })
+        router.layer(GovernorLayer {
+            config: Arc::new(config),
+        })
     } else {
         router
     }
@@ -73,10 +73,12 @@ pub fn create_router(state: AppState) -> Router {
             span.record("latency_ms", latency.as_millis() as u64);
             tracing::info!("request completed");
         })
-        .on_failure(|error: ServerErrorsFailureClass, latency: Duration, span: &Span| {
-            span.record("latency_ms", latency.as_millis() as u64);
-            tracing::error!(error = %error, "request failed");
-        });
+        .on_failure(
+            |error: ServerErrorsFailureClass, latency: Duration, span: &Span| {
+                span.record("latency_ms", latency.as_millis() as u64);
+                tracing::error!(error = %error, "request failed");
+            },
+        );
 
     let auth_routes = Router::new()
         .route("/register", post(auth::register))
@@ -126,7 +128,7 @@ pub fn create_router(state: AppState) -> Router {
 
     Router::new()
         .route("/health", get(health_check))
-        .nest("/api", api_routes)
+        .nest("/api/v1", api_routes)
         .layer(
             ServiceBuilder::new()
                 .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid))

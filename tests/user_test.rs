@@ -12,7 +12,7 @@ async fn test_get_me_returns_current_user() {
 
     let response = app
         .client
-        .get(format!("{}/api/users/me", app.base_url))
+        .get(app.api_path("/users/me"))
         .bearer_auth(&tokens.access)
         .send()
         .await
@@ -32,7 +32,7 @@ async fn test_update_me_updates_own_account() {
 
     let response = app
         .client
-        .put(format!("{}/api/users/me", app.base_url))
+        .put(app.api_path("/users/me"))
         .bearer_auth(&tokens.access)
         .json(&json!({
             "name": "After Name"
@@ -55,7 +55,7 @@ async fn test_delete_me_hard_deletes_user() {
 
     let delete_response = app
         .client
-        .delete(format!("{}/api/users/me", app.base_url))
+        .delete(app.api_path("/users/me"))
         .bearer_auth(&tokens.access)
         .send()
         .await
@@ -65,7 +65,7 @@ async fn test_delete_me_hard_deletes_user() {
 
     let get_response = app
         .client
-        .get(format!("{}/api/users/me", app.base_url))
+        .get(app.api_path("/users/me"))
         .bearer_auth(&tokens.access)
         .send()
         .await
@@ -90,7 +90,7 @@ async fn test_list_users_paginated() {
 
     let response = app
         .client
-        .get(format!("{}/api/users?per_page=2&page=1", app.base_url))
+        .get(app.api_path("/users?per_page=2&page=1"))
         .bearer_auth(&tokens.access)
         .send()
         .await
@@ -112,7 +112,7 @@ async fn test_list_users_invalid_page_400() {
 
     let response = app
         .client
-        .get(format!("{}/api/users?page=0", app.base_url))
+        .get(app.api_path("/users?page=0"))
         .bearer_auth(&tokens.access)
         .send()
         .await
@@ -129,7 +129,7 @@ async fn test_list_users_invalid_per_page_400() {
 
     let response = app
         .client
-        .get(format!("{}/api/users?per_page=101", app.base_url))
+        .get(app.api_path("/users?per_page=101"))
         .bearer_auth(&tokens.access)
         .send()
         .await

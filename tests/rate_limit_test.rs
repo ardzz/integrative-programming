@@ -19,7 +19,7 @@ async fn test_login_rate_limit_triggers_429() {
     for _ in 0..6 {
         let response = app
             .client
-            .post(format!("{}/api/auth/login", app.base_url))
+            .post(app.api_path("/auth/login"))
             .json(&json!({
                 "email": email,
                 "password": "wrong-password",
@@ -48,12 +48,7 @@ async fn test_global_rate_limit_triggers_429() {
     let mut saw_429 = false;
 
     for _ in 0..65 {
-        let response = app
-            .client
-            .get(format!("{}/api/posts", app.base_url))
-            .send()
-            .await
-            .unwrap();
+        let response = app.client.get(app.api_path("/posts")).send().await.unwrap();
 
         if response.status() == StatusCode::TOO_MANY_REQUESTS {
             saw_429 = true;

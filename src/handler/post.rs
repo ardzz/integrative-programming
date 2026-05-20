@@ -86,15 +86,14 @@ pub async fn create_post(
         ));
     }
 
-    let result = sqlx::query(
-        "INSERT INTO posts (title, status, content, user_id) VALUES (?, ?, ?, ?)",
-    )
-    .bind(&input.title)
-    .bind(&status)
-    .bind(&input.content)
-    .bind(auth.user_id)
-    .execute(&state.db)
-    .await?;
+    let result =
+        sqlx::query("INSERT INTO posts (title, status, content, user_id) VALUES (?, ?, ?, ?)")
+            .bind(&input.title)
+            .bind(&status)
+            .bind(&input.content)
+            .bind(auth.user_id)
+            .execute(&state.db)
+            .await?;
 
     let new_id = result.last_insert_id() as i32;
     tracing::info!(event = "post.created", post_id = %new_id, author_id = %auth.user_id, "Post created");

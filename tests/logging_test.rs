@@ -12,7 +12,7 @@ async fn test_login_success_emits_event() {
     register_user(&app, "LogTest", &email, "qwerty").await;
 
     app.client
-        .post(format!("{}/api/auth/login", app.base_url))
+        .post(app.api_path("/auth/login"))
         .json(&json!({"email": email, "password": "qwerty"}))
         .send()
         .await
@@ -27,7 +27,7 @@ async fn test_login_failure_emits_event() {
     let app = spawn_app().await;
 
     app.client
-        .post(format!("{}/api/auth/login", app.base_url))
+        .post(app.api_path("/auth/login"))
         .json(&json!({"email": "nonexistent@test.com", "password": "wrong"}))
         .send()
         .await
@@ -54,7 +54,7 @@ async fn test_not_found_emits_warn() {
     let app = spawn_app().await;
 
     app.client
-        .get(format!("{}/api/posts/99999", app.base_url))
+        .get(app.api_path("/posts/99999"))
         .send()
         .await
         .unwrap();

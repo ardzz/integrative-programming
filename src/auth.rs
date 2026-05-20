@@ -17,17 +17,23 @@ pub struct Claims {
     pub exp: usize,
     pub iat: usize,
     pub token_type: String,
+    pub jti: String,
 }
 
 #[allow(dead_code)]
 #[instrument(skip_all)]
-pub fn create_access_token(user_id: i32, secret: &str, ttl_minutes: u32) -> Result<String, AppError> {
+pub fn create_access_token(
+    user_id: i32,
+    secret: &str,
+    ttl_minutes: u32,
+) -> Result<String, AppError> {
     let now = chrono::Utc::now();
     let claims = Claims {
         sub: user_id.to_string(),
         iat: now.timestamp() as usize,
         exp: (now + chrono::Duration::seconds((ttl_minutes as i64) * 60)).timestamp() as usize,
         token_type: "access".to_string(),
+        jti: uuid::Uuid::new_v4().to_string(),
     };
 
     let token = encode_jwt(&claims, secret)?;
@@ -49,6 +55,7 @@ pub fn create_refresh_token(user_id: i32, secret: &str, ttl_days: u32) -> Result
         iat: now.timestamp() as usize,
         exp: (now + chrono::Duration::seconds((ttl_days as i64) * 86_400)).timestamp() as usize,
         token_type: "refresh".to_string(),
+        jti: uuid::Uuid::new_v4().to_string(),
     };
 
     let token = encode_jwt(&claims, secret)?;
@@ -164,10 +171,10 @@ pub fn verify_password(password: &str, hash: &str) -> Result<bool, AppError> {
 #[cfg(test)]
 mod tests {
     use super::{
-        AuthUser, create_access_token, create_refresh_token, hash_password, verify_password,
-        verify_refresh_token, verify_token,
+        create_access_token, create_refresh_token, hash_password, verify_password,
+        verify_refresh_token, verify_token, AuthUser,
     };
-    use crate::{AppState, error::AppError};
+    use crate::{error::AppError, AppState};
     use axum::extract::FromRequestParts;
     use axum::http::header::AUTHORIZATION;
     use axum::http::Request;

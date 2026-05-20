@@ -11,7 +11,7 @@ async fn test_register_returns_201_with_token() {
 
     let response = app
         .client
-        .post(format!("{}/api/auth/register", app.base_url))
+        .post(app.api_path("/auth/register"))
         .json(&json!({
             "name": "Register User",
             "email": email,
@@ -38,7 +38,7 @@ async fn test_register_returns_both_tokens() {
 
     let response = app
         .client
-        .post(format!("{}/api/auth/register", app.base_url))
+        .post(app.api_path("/auth/register"))
         .json(&json!({
             "name": "Register Both Tokens",
             "email": email,
@@ -50,8 +50,12 @@ async fn test_register_returns_both_tokens() {
 
     assert_eq!(response.status(), StatusCode::CREATED);
     let body: serde_json::Value = response.json().await.unwrap();
-    assert!(body["access_token"].as_str().is_some_and(|token| token.len() > 20));
-    assert!(body["refresh_token"].as_str().is_some_and(|token| token.len() > 20));
+    assert!(body["access_token"]
+        .as_str()
+        .is_some_and(|token| token.len() > 20));
+    assert!(body["refresh_token"]
+        .as_str()
+        .is_some_and(|token| token.len() > 20));
 }
 
 #[tokio::test]
@@ -63,7 +67,7 @@ async fn test_register_duplicate_email_returns_409() {
 
     let response = app
         .client
-        .post(format!("{}/api/auth/register", app.base_url))
+        .post(app.api_path("/auth/register"))
         .json(&json!({
             "name": "Second User",
             "email": email,
@@ -84,7 +88,7 @@ async fn test_login_returns_200_with_token() {
 
     let response = app
         .client
-        .post(format!("{}/api/auth/login", app.base_url))
+        .post(app.api_path("/auth/login"))
         .json(&json!({
             "email": email,
             "password": "qwerty",
@@ -121,7 +125,7 @@ async fn test_refresh_with_valid_refresh_token_returns_new_pair() {
 
     let response = app
         .client
-        .post(format!("{}/api/auth/refresh", app.base_url))
+        .post(app.api_path("/auth/refresh"))
         .json(&json!({
             "refresh_token": tokens.refresh,
         }))
@@ -131,8 +135,12 @@ async fn test_refresh_with_valid_refresh_token_returns_new_pair() {
 
     assert_eq!(response.status(), StatusCode::OK);
     let body: serde_json::Value = response.json().await.unwrap();
-    let access_token = body["access_token"].as_str().expect("access_token should be present");
-    let refresh_token = body["refresh_token"].as_str().expect("refresh_token should be present");
+    let access_token = body["access_token"]
+        .as_str()
+        .expect("access_token should be present");
+    let refresh_token = body["refresh_token"]
+        .as_str()
+        .expect("refresh_token should be present");
 
     assert!(access_token.len() > 20);
     assert!(refresh_token.len() > 20);
@@ -148,7 +156,7 @@ async fn test_refresh_with_access_token_returns_401() {
 
     let response = app
         .client
-        .post(format!("{}/api/auth/refresh", app.base_url))
+        .post(app.api_path("/auth/refresh"))
         .json(&json!({
             "refresh_token": tokens.access,
         }))
@@ -165,7 +173,7 @@ async fn test_refresh_with_empty_string_returns_400() {
 
     let response = app
         .client
-        .post(format!("{}/api/auth/refresh", app.base_url))
+        .post(app.api_path("/auth/refresh"))
         .json(&json!({
             "refresh_token": "",
         }))
@@ -184,7 +192,7 @@ async fn test_login_invalid_credentials_returns_401() {
 
     let response = app
         .client
-        .post(format!("{}/api/auth/login", app.base_url))
+        .post(app.api_path("/auth/login"))
         .json(&json!({
             "email": email,
             "password": "wrong-password",
@@ -202,7 +210,7 @@ async fn test_register_invalid_email_returns_400() {
 
     let response = app
         .client
-        .post(format!("{}/api/auth/register", app.base_url))
+        .post(app.api_path("/auth/register"))
         .json(&json!({
             "name": "Bad Email",
             "email": "not-an-email",
@@ -222,7 +230,7 @@ async fn test_register_short_password_returns_400() {
 
     let response = app
         .client
-        .post(format!("{}/api/auth/register", app.base_url))
+        .post(app.api_path("/auth/register"))
         .json(&json!({
             "name": "Short Password",
             "email": email,

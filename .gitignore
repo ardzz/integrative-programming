@@ -1,3 +1,9 @@
 /target
 .env
 *.swp
+
+# TLS certificates (Week 7) - never commit these
+certs/
+*.pem
+*.key
+*.crt

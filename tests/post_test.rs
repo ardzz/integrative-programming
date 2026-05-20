@@ -1,6 +1,8 @@
 mod common;
 
-use common::{assert_error_message, create_test_post, login_user, register_user, spawn_app, unique_email};
+use common::{
+    assert_error_message, create_test_post, login_user, register_user, spawn_app, unique_email,
+};
 use reqwest::StatusCode;
 use serde_json::json;
 
@@ -8,17 +10,18 @@ use serde_json::json;
 async fn test_list_posts_returns_200() {
     let app = spawn_app().await;
 
-    let response = app
-        .client
-        .get(format!("{}/api/posts", app.base_url))
-        .send()
-        .await
-        .unwrap();
+    let response = app.client.get(app.api_path("/posts")).send().await.unwrap();
 
     assert_eq!(response.status(), StatusCode::OK);
     let body: serde_json::Value = response.json().await.unwrap();
-    assert!(body["data"].is_array(), "paginated envelope must expose data array");
-    assert!(body["meta"].is_object(), "paginated envelope must expose meta object");
+    assert!(
+        body["data"].is_array(),
+        "paginated envelope must expose data array"
+    );
+    assert!(
+        body["meta"].is_object(),
+        "paginated envelope must expose meta object"
+    );
 }
 
 #[tokio::test]
@@ -29,7 +32,7 @@ async fn test_create_post_returns_201() {
 
     let response = app
         .client
-        .post(format!("{}/api/posts", app.base_url))
+        .post(app.api_path("/posts"))
         .bearer_auth(&tokens.access)
         .json(&json!({
             "title": "First Post",
@@ -52,7 +55,7 @@ async fn test_create_post_without_auth_returns_401() {
 
     let response = app
         .client
-        .post(format!("{}/api/posts", app.base_url))
+        .post(app.api_path("/posts"))
         .json(&json!({
             "title": "No Auth",
             "content": "Denied",
@@ -75,7 +78,7 @@ async fn test_get_post_returns_200() {
 
     let response = app
         .client
-        .get(format!("{}/api/posts/{post_id}", app.base_url))
+        .get(app.api_path(&format!("/posts/{post_id}")))
         .send()
         .await
         .unwrap();
@@ -92,7 +95,7 @@ async fn test_get_nonexistent_post_returns_404() {
 
     let response = app
         .client
-        .get(format!("{}/api/posts/99999", app.base_url))
+        .get(app.api_path("/posts/99999"))
         .send()
         .await
         .unwrap();
@@ -110,7 +113,7 @@ async fn test_update_own_post_returns_200() {
 
     let response = app
         .client
-        .put(format!("{}/api/posts/{post_id}", app.base_url))
+        .put(app.api_path(&format!("/posts/{post_id}")))
         .bearer_auth(&tokens.access)
         .json(&json!({
             "title": "New Title",
@@ -134,12 +137,18 @@ async fn test_update_others_post_returns_403() {
     let other_email = unique_email("post-update-other-actor");
     let (owner_tokens, _) = register_user(&app, "Owner", &owner_email, "qwerty").await;
     let (other_tokens, _) = register_user(&app, "Other", &other_email, "qwerty").await;
-    let post = create_test_post(&app, &owner_tokens.access, "Protected Post", "Original content").await;
+    let post = create_test_post(
+        &app,
+        &owner_tokens.access,
+        "Protected Post",
+        "Original content",
+    )
+    .await;
     let post_id = post["id"].as_i64().unwrap();
 
     let response = app
         .client
-        .put(format!("{}/api/posts/{post_id}", app.base_url))
+        .put(app.api_path(&format!("/posts/{post_id}")))
         .bearer_auth(&other_tokens.access)
         .json(&json!({
             "title": "Hijacked",
@@ -164,7 +173,7 @@ async fn test_delete_own_post_returns_204() {
 
     let response = app
         .client
-        .delete(format!("{}/api/posts/{post_id}", app.base_url))
+        .delete(app.api_path(&format!("/posts/{post_id}")))
         .bearer_auth(&tokens.access)
         .send()
         .await
@@ -186,7 +195,7 @@ async fn test_delete_others_post_returns_403() {
 
     let response = app
         .client
-        .delete(format!("{}/api/posts/{post_id}", app.base_url))
+        .delete(app.api_path(&format!("/posts/{post_id}")))
         .bearer_auth(&other_tokens.access)
         .send()
         .await
@@ -203,7 +212,7 @@ async fn test_create_post_defaults_status_to_draft() {
 
     let response = app
         .client
-        .post(format!("{}/api/posts", app.base_url))
+        .post(app.api_path("/posts"))
         .bearer_auth(&tokens.access)
         .json(&json!({
             "title": "Default Status",
@@ -236,7 +245,7 @@ async fn test_list_posts_paginated() {
 
     let response = app
         .client
-        .get(format!("{}/api/posts?per_page=2&page=1", app.base_url))
+        .get(app.api_path("/posts?per_page=2&page=1"))
         .send()
         .await
         .unwrap();
@@ -264,7 +273,7 @@ async fn test_list_posts_meta_total_correct() {
 
     let before: serde_json::Value = app
         .client
-        .get(format!("{}/api/posts?per_page=1&page=1", app.base_url))
+        .get(app.api_path("/posts?per_page=1&page=1"))
         .send()
         .await
         .unwrap()
@@ -286,7 +295,7 @@ async fn test_list_posts_meta_total_correct() {
 
     let response = app
         .client
-        .get(format!("{}/api/posts?per_page=1&page=1", app.base_url))
+        .get(app.api_path("/posts?per_page=1&page=1"))
         .send()
         .await
         .unwrap();
