@@ -6,6 +6,13 @@ on:
   pull_request:
     branches: [master, main]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: 1
@@ -14,6 +21,9 @@ jobs:
   check:
     name: Format + Clippy
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
@@ -31,9 +41,47 @@ jobs:
       - name: cargo clippy
         run: cargo clippy --all-targets -- -D warnings
 
+  msrv:
+    name: MSRV (Rust 1.85)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust 1.85 toolchain
+        uses: dtolnay/rust-toolchain@1.85
+
+      - name: Cache cargo registry
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: msrv
+
+      - name: cargo check (MSRV)
+        run: cargo check --all-targets --locked
+
+  deny:
+    name: Cargo Deny (advisories + licenses + bans)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: cargo-deny check
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check advisories bans licenses sources
+
   test:
     name: Test (MySQL service container)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [check]
+    permissions:
+      contents: read
 
     services:
       mysql:
@@ -54,7 +102,7 @@ jobs:
 
     env:
       DATABASE_URL: mysql://blog_user:blog_password@127.0.0.1:3306/blog_db
-      JWT_SECRET: ci-only-secret-do-not-use-in-prod
+      JWT_SECRET: ${{ secrets.JWT_SECRET || 'ci-fallback-secret-do-not-use-in-prod' }}
       RATE_LIMIT_ENABLED: "false"
       ACCESS_TOKEN_TTL_MINUTES: "15"
       REFRESH_TOKEN_TTL_DAYS: "7"
@@ -83,4 +131,4 @@ jobs:
           exit 1
 
       - name: cargo test
-        run: cargo test --tests -- --test-threads=1
+        run: cargo test --tests --locked -- --test-threads=1
