@@ -1,7 +1,7 @@
 # Blog API
 
 [![CI](https://github.com/ardzz/integrative-programming/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/ardzz/integrative-programming/actions/workflows/ci.yml)
-[![Rust](https://img.shields.io/badge/rust-1.85%2B-orange?logo=rust)](https://www.rust-lang.org)
+[![Rust](https://img.shields.io/badge/rust-1.88%2B-orange?logo=rust)](https://www.rust-lang.org)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 A RESTful blog API built with Rust, Axum, and MySQL. Outputs structured JSON logs compatible with [Gonzo](https://github.com/control-theory/gonzo) for real-time log analysis.

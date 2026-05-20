@@ -8,7 +8,11 @@ feature-depth = 1
 [advisories]
 version = 2
 yanked = "warn"
-ignore = []
+ignore = [
+    { id = "RUSTSEC-2026-0097", reason = "rand 0.8 unsoundness with custom logger; transitive via fake/sqlx, no upstream fix yet — track for milestone" },
+    { id = "RUSTSEC-2023-0071", reason = "Marvin Attack on rsa crate; transitive via sqlx-mysql (caching_sha2_password). No fix available upstream; mitigated in practice by short-lived MySQL TLS sessions" },
+    { id = "RUSTSEC-2026-0104", reason = "Reachable panic in CRL parsing; transitive dep, not on our hot path (no CRL parsing in app code)" },
+]
 
 [licenses]
 version = 2
